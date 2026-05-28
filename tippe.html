@@ -382,16 +382,16 @@ function lastInnTips(d) {
 // ─── Steg 2: R16-grid ────────────────────────────────────
 function byggR16Grid() {
   const container = document.getElementById("lag-grid-r16");
-  const grupperte = lagPerKonf();
+  const grupperte = lagPerGruppe();
   container.innerHTML = "";
-  for (const konf of KONFEDERASJONAR) {
-    const lag = grupperte[konf];
+  for (const g of GRUPPER) {
+    const lag = grupperte[g];
     if (!lag.length) continue;
     const div = document.createElement("div");
     div.className = "konf-gruppe";
-    div.innerHTML = `<div class="konf-tittel">${KONF_NAMN[konf]}</div><div class="lag-grid" id="grid-${konf}"></div>`;
+    div.innerHTML = `<div class="konf-tittel">Gruppe ${g}</div><div class="lag-grid" id="grid-${g}"></div>`;
     container.appendChild(div);
-    const grid = document.getElementById("grid-" + konf);
+    const grid = document.getElementById("grid-" + g);
     for (const l of lag) {
       grid.appendChild(lagKnapp(l, "r16"));
     }
