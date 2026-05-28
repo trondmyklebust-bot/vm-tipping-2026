@@ -69,7 +69,36 @@ function lagFraId(id) {
   return ALLE_LAG.find(l => l.id === id) || { id, namn: id, flag: "🏳️", konf: "?" };
 }
 
-// Grupper lag etter konføderasjon (for visning)
+// ===================================================
+// VM-grupper (trekning desember 2025)
+// ===================================================
+
+const GRUPPER = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"];
+
+const GRUPPE_LAG = {
+  A: ["mexico",    "sorafrika",       "sorkorea",    "tsjekkia"],
+  B: ["canada",    "bosnia",          "qatar",       "sveits"],
+  C: ["brasil",    "marokko",         "haiti",       "skottland"],
+  D: ["usa",       "paraguay",        "australia",   "tyrkia"],
+  E: ["tyskland",  "curacao",         "elfenbenskysten", "ecuador"],
+  F: ["nederland", "japan",           "sverige",     "tunisia"],
+  G: ["belgia",    "egypt",           "iran",        "newzealand"],
+  H: ["spania",    "kappverde",       "saudi",       "uruguay"],
+  I: ["frankrike", "senegal",         "irak",        "noreg"],
+  J: ["argentina", "algerie",         "austerrike",  "jordan"],
+  K: ["portugal",  "drkongo",         "usbekistan",  "colombia"],
+  L: ["england",   "kroatia",         "ghana",       "panama"],
+};
+
+function lagPerGruppe() {
+  const res = {};
+  for (const g of GRUPPER) {
+    res[g] = GRUPPE_LAG[g].map(id => lagFraId(id));
+  }
+  return res;
+}
+
+// Behold konf-funksjonar for bakoverkompatibilitet
 const KONFEDERASJONAR = ["CONCACAF", "UEFA", "CONMEBOL", "AFC", "CAF", "OFC"];
 const KONF_NAMN = {
   CONCACAF: "Nord-/Mellom-Amerika og Karibia",
