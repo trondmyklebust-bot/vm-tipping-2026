@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poengtavle – VM 2026 ⚽</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/teams.js"></script>
+<style>
+  :root {
+    --bg:     #0d1b2e;
+    --bg2:    #122036;
+    --card:   #1a2d45;
+    --green:  #16a34a;
+    --gold:   #f59e0b;
+    --silver: #94a3b8;
+    --bronze: #c2894a;
+    --text:   #e2e8f0;
+    --muted:  #94a3b8;
+    --border: #2a3f5f;
+    --sel:    #0ea5e9;
+    --red:    #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
+  a { color: var(--sel); text-decoration: none; }
+
+  header { background: var(--bg2); border-bottom: 1px solid var(--border);
+           padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.25rem; font-weight: 700; }
+  header nav a { color: var(--muted); margin-left: 1rem; font-size: .9rem; }
+
+  main { max-width: 960px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Rundestatus-banner */
+  .runde-status { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+  .runde-badge {
+    padding: .35rem .8rem; border-radius: 9999px; font-size: .82rem; font-weight: 700;
+    border: 1px solid var(--border); background: var(--card); color: var(--muted);
+  }
+  .runde-badge.aktiv { background: var(--green); border-color: var(--green); color: #fff; }
+  .runde-badge.venter { border-color: var(--gold); color: var(--gold); background: transparent; }
+
+  /* Poengtavle */
+  .tavle { background: var(--card); border: 1px solid var(--border); border-radius: .75rem; overflow: hidden; }
+  .tavle-header { background: var(--bg2); padding: .75rem 1.25rem;
+                  display: grid; grid-template-columns: 3rem 1fr repeat(6, 4rem);
+                  gap: .5rem; font-size: .78rem; font-weight: 700; color: var(--muted);
+                  text-transform: uppercase; letter-spacing: .05em; }
+  .tavle-rad {
+    display: grid; grid-template-columns: 3rem 1fr repeat(6, 4rem);
+    gap: .5rem; padding: .85rem 1.25rem; align-items: center;
+    border-top: 1px solid var(--border); transition: background .15s;
+  }
+  .tavle-rad:hover { background: rgba(255,255,255,.03); }
+  .tavle-rad.topp1 { background: rgba(245,158,11,.08); }
+  .tavle-rad.topp2 { background: rgba(148,163,184,.05); }
+  .tavle-rad.topp3 { background: rgba(194,137,74,.06); }
+
+  .plass { font-size: 1.1rem; font-weight: 700; text-align: center; }
+  .plass-1 { color: var(--gold); }
+  .plass-2 { color: var(--silver); }
+  .plass-3 { color: var(--bronze); }
+
+  .namn-celle { font-weight: 600; }
+  .namn-celle small { display: block; font-size: .78rem; color: var(--muted); font-weight: 400; }
+
+  .poeng-celle { text-align: center; font-size: .9rem; font-weight: 600; }
+  .poeng-celle.total { font-size: 1.1rem; color: var(--gold); }
+  .poeng-celle.grå  { color: var(--muted); }
+  .poeng-celle.vent { color: var(--muted); font-style: italic; font-size: .78rem; }
+
+  .betalt-ja  { color: var(--green); font-size: .85rem; text-align: center; }
+  .betalt-nei { color: var(--red);   font-size: .85rem; text-align: center; }
+
+  /* Laster-melding */
+  .laster { text-align: center; padding: 3rem; color: var(--muted); }
+  .laster .spinner { font-size: 2rem; animation: snurr 1s linear infinite; display: inline-block; }
+  @keyframes snurr { to { transform: rotate(360deg); } }
+
+  /* Detaljar-panel */
+  .detaljar-knapp { background: none; border: none; color: var(--sel); cursor: pointer;
+                    font-size: .8rem; padding: .2rem .4rem; }
+  .detaljar-panel {
+    grid-column: 1 / -1; padding: 1rem; background: var(--bg2);
+    border-radius: .5rem; margin-top: .5rem; display: none;
+  }
+  .detaljar-panel.synleg { display: block; }
+  .detaljar-seksjon { margin-bottom: .75rem; }
+  .detaljar-seksjon h4 { font-size: .8rem; color: var(--muted); margin-bottom: .4rem; font-weight: 600; }
+  .chip-liten {
+    display: inline-flex; align-items: center; gap: .25rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 9999px; padding: .15rem .55rem; font-size: .78rem; margin: .15rem;
+  }
+  .chip-liten.riktig { border-color: var(--green); background: rgba(22,163,74,.15); }
+  .chip-liten.feil   { opacity: .45; }
+
+  /* Metadataraden øvst */
+  .meta-rad { display: flex; align-items: center; justify-content: space-between;
+              margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem; }
+  .meta-rad h2 { font-size: 1.4rem; font-weight: 700; }
+  .sist-oppdatert { font-size: .8rem; color: var(--muted); }
+  .oppdater-knapp { background: var(--card); border: 1px solid var(--border); color: var(--text);
+                    padding: .4rem .8rem; border-radius: .4rem; cursor: pointer; font-size: .85rem; }
+  .oppdater-knapp:hover { border-color: var(--sel); }
+
+  .tom-tavle { padding: 3rem; text-align: center; color: var(--muted); }
+
+  @media (max-width: 700px) {
+    .tavle-header, .tavle-rad {
+      grid-template-columns: 2.5rem 1fr repeat(3, 3.2rem);
+    }
+    .skjul-mobil { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1 id="app-tittel">VM-tipping 2026 ⚽</h1>
+  <nav>
+    <a href="index.html">Heim</a>
+    <a href="tippe.html">Tippe</a>
+  </nav>
+</header>
+
+<main>
+  <div class="meta-rad">
+    <h2>🏆 Poengtavle</h2>
+    <div style="display:flex;gap:.75rem;align-items:center">
+      <span class="sist-oppdatert" id="sist-oppdatert"></span>
+      <button class="oppdater-knapp" onclick="lastData()">↻ Oppdater</button>
+    </div>
+  </div>
+
+  <!-- Rundestatus -->
+  <div class="runde-status" id="runde-status"></div>
+
+  <!-- Poengtavle -->
+  <div id="tavle-container">
+    <div class="laster"><span class="spinner">⚽</span><br>Lastar…</div>
+  </div>
+
+</main>
+
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("app-tittel").textContent = APP.tittel;
+  lastData();
+});
+
+async function lastData() {
+  document.getElementById("tavle-container").innerHTML =
+    '<div class="laster"><span class="spinner">⚽</span><br>Lastar…</div>';
+
+  try {
+    const [tipperSnap, resultatSnap] = await Promise.all([
+      db.collection("tippers").get(),
+      db.collection("resultater").doc("aktive").get(),
+    ]);
+
+    const resultat = resultatSnap.exists ? resultatSnap.data() : {};
+    const tippers = tipperSnap.docs.map(d => d.data());
+
+    visRundeStatus(resultat);
+    visPoengtavle(tippers, resultat);
+
+    document.getElementById("sist-oppdatert").textContent =
+      "Sist oppdatert: " + new Date().toLocaleTimeString("nn-NO");
+  } catch (e) {
+    console.error(e);
+    document.getElementById("tavle-container").innerHTML =
+      '<div class="laster">Klarte ikkje lasta data. Sjekk Firebase-konfigurasjonen.</div>';
+  }
+}
+
+function visRundeStatus(resultat) {
+  const rundar = [
+    { key: "r16",    namn: "Runde med 16" },
+    { key: "qf",     namn: "Kvartfinale" },
+    { key: "sf",     namn: "Semifinale" },
+    { key: "finale", namn: "Finale" },
+    { key: "ranking",namn: "Topp 4" },
+  ];
+  const container = document.getElementById("runde-status");
+  container.innerHTML = rundar.map(r => {
+    const har = resultat[r.key] && (Array.isArray(resultat[r.key]) ? resultat[r.key].length > 0 : true);
+    const cls = har ? "runde-badge aktiv" : "runde-badge venter";
+    const ikon = har ? "✅" : "⏳";
+    return `<span class="${cls}">${ikon} ${r.namn}</span>`;
+  }).join("");
+}
+
+function visPoengtavle(tippers, resultat) {
+  const container = document.getElementById("tavle-container");
+  if (!tippers.length) {
+    container.innerHTML = '<div class="tavle"><div class="tom-tavle">Ingen har tippa enno.</div></div>';
+    return;
+  }
+
+  // Rekn ut poeng for alle
+  const rangerte = tippers.map(t => {
+    const { poeng, detaljar } = beregnPoeng(t, resultat);
+    return { ...t, poeng, detaljar };
+  }).sort((a, b) => b.poeng - a.poeng || a.namn.localeCompare(b.namn));
+
+  const harR16    = !!(resultat.r16 && resultat.r16.length);
+  const harQF     = !!(resultat.qf  && resultat.qf.length);
+  const harSF     = !!(resultat.sf  && resultat.sf.length);
+  const harFinale = !!(resultat.finale && resultat.finale.length);
+  const harRank   = !!(resultat.ranking && resultat.ranking.length);
+
+  let html = `
+    <div class="tavle">
+      <div class="tavle-header">
+        <div>#</div>
+        <div>Namn</div>
+        <div class="skjul-mobil">R16</div>
+        <div class="skjul-mobil">QF</div>
+        <div class="skjul-mobil">SF</div>
+        <div class="skjul-mobil">Finale</div>
+        <div class="skjul-mobil">Topp4</div>
+        <div>Sum</div>
+      </div>`;
+
+  rangerte.forEach((t, i) => {
+    const plass = i + 1;
+    const plassKls = plass === 1 ? "plass-1" : plass === 2 ? "plass-2" : plass === 3 ? "plass-3" : "";
+    const radKls   = plass === 1 ? "topp1" : plass === 2 ? "topp2" : plass === 3 ? "topp3" : "";
+    const plassIkon = plass === 1 ? "🥇" : plass === 2 ? "🥈" : plass === 3 ? "🥉" : plass;
+
+    const celleEl = (verdi, har) => har
+      ? `<div class="poeng-celle">${verdi}</div>`
+      : `<div class="poeng-celle vent">–</div>`;
+
+    html += `
+      <div class="tavle-rad ${radKls}" id="rad-${i}">
+        <div class="plass ${plassKls}">${plassIkon}</div>
+        <div class="namn-celle">
+          ${t.namn}
+          <small>${t.epost || ""}</small>
+        </div>
+        ${celleEl(t.detaljar.r16, harR16)}
+        ${celleEl(t.detaljar.qf,  harQF)}
+        ${celleEl(t.detaljar.sf,  harSF)}
+        ${celleEl(t.detaljar.finale, harFinale)}
+        ${celleEl(t.detaljar.ranking, harRank)}
+        <div class="poeng-celle total">${t.poeng}</div>
+      </div>
+      <div class="detaljar-panel" id="detaljar-${i}">
+        ${byggDetaljarHTML(t, resultat)}
+      </div>`;
+  });
+
+  html += "</div>";
+  container.innerHTML = html;
+
+  // Klikk for å visa detaljar
+  rangerte.forEach((_, i) => {
+    document.getElementById("rad-" + i).addEventListener("click", () => {
+      const panel = document.getElementById("detaljar-" + i);
+      panel.classList.toggle("synleg");
+    });
+    document.getElementById("rad-" + i).style.cursor = "pointer";
+    document.getElementById("rad-" + i).title = "Klikk for detaljar";
+  });
+}
+
+function byggDetaljarHTML(tips, res) {
+  const fasar = [
+    { key: "r16",    tittel: "🏟️ Runde med 16", resKey: "r16" },
+    { key: "qf",     tittel: "⚡ Kvartfinale",   resKey: "qf" },
+    { key: "sf",     tittel: "🔥 Semifinale",    resKey: "sf" },
+    { key: "finale", tittel: "🏆 Finale",         resKey: "finale" },
+  ];
+  let html = "";
+  for (const f of fasar) {
+    if (!tips[f.key] || !tips[f.key].length) continue;
+    html += `<div class="detaljar-seksjon"><h4>${f.tittel}</h4>`;
+    for (const id of tips[f.key]) {
+      const l = lagFraId(id);
+      const erRiktig = res[f.resKey] && res[f.resKey].includes(id);
+      const erAvklart = !!(res[f.resKey] && res[f.resKey].length);
+      const cls = erAvklart ? (erRiktig ? "chip-liten riktig" : "chip-liten feil") : "chip-liten";
+      html += `<span class="${cls}">${l.flag} ${l.namn}</span>`;
+    }
+    html += "</div>";
+  }
+  // Rangering
+  if (tips.ranking && tips.ranking.some(v => v)) {
+    html += `<div class="detaljar-seksjon"><h4>📊 Topp 4</h4>`;
+    const posnamn = ["🥇", "🥈", "🥉", "4."];
+    tips.ranking.forEach((id, i) => {
+      if (!id) return;
+      const l = lagFraId(id);
+      const erRiktig = res.ranking && res.ranking[i] === id;
+      const erAvklart = !!(res.ranking && res.ranking.length);
+      const cls = erAvklart ? (erRiktig ? "chip-liten riktig" : "chip-liten feil") : "chip-liten";
+      html += `<span class="${cls}">${posnamn[i]} ${l.flag} ${l.namn}</span>`;
+    });
+    html += "</div>";
+  }
+  return html || "<p style='color:var(--muted);font-size:.85rem'>Ingen detaljar tilgjengeleg enno.</p>";
+}
+</script>
+</body>
+</html>

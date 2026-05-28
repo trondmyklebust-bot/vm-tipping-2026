@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="nn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – VM 2026 ⚽</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="js/config.js"></script>
+<script src="js/teams.js"></script>
+<style>
+  :root {
+    --bg:     #0d1b2e;
+    --bg2:    #122036;
+    --card:   #1a2d45;
+    --green:  #16a34a;
+    --green2: #15803d;
+    --gold:   #f59e0b;
+    --text:   #e2e8f0;
+    --muted:  #94a3b8;
+    --border: #2a3f5f;
+    --sel:    #0ea5e9;
+    --red:    #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
+
+  header { background: var(--bg2); border-bottom: 1px solid var(--border);
+           padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.25rem; font-weight: 700; }
+  header nav a { color: var(--muted); margin-left: 1rem; font-size: .9rem; text-decoration: none; }
+
+  main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+
+  /* Innlogging */
+  .innlogging {
+    max-width: 360px; margin: 4rem auto; background: var(--card);
+    border: 1px solid var(--border); border-radius: .75rem; padding: 2rem;
+    text-align: center;
+  }
+  .innlogging h2 { margin-bottom: 1rem; }
+  .innlogging input {
+    width: 100%; padding: .75rem 1rem; margin-bottom: 1rem;
+    background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+    border-radius: .5rem; font-size: 1rem; outline: none;
+  }
+  .innlogging input:focus { border-color: var(--sel); }
+
+  h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: .5rem; }
+  h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: .75rem; color: var(--gold); }
+  .ingress { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; }
+
+  /* Runde-kort */
+  .runde-kort {
+    background: var(--card); border: 1px solid var(--border); border-radius: .75rem;
+    padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+  }
+  .runde-kort.ferdig { border-color: var(--green); }
+  .runde-status-linje { display: flex; align-items: center; justify-content: space-between;
+                        margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+  .status-badge { padding: .25rem .7rem; border-radius: 9999px; font-size: .8rem; font-weight: 700; }
+  .status-badge.ok   { background: rgba(22,163,74,.2); color: var(--green); border: 1px solid var(--green); }
+  .status-badge.vent { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+
+  /* Vel-lag-grid */
+  .vel-grid { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1rem; }
+  .vel-knapp {
+    padding: .35rem .75rem; border-radius: .4rem; font-size: .85rem; font-weight: 600;
+    background: var(--bg2); border: 2px solid var(--border); color: var(--text);
+    cursor: pointer; transition: all .15s;
+  }
+  .vel-knapp:hover { border-color: var(--sel); }
+  .vel-knapp.valt  { background: var(--green); border-color: var(--green); color: #fff; }
+
+  .teller-liten { font-size: .8rem; color: var(--muted); margin-bottom: .5rem; }
+  .teller-liten span { color: var(--gold); font-weight: 700; }
+
+  /* Knappar */
+  .knapp { padding: .65rem 1.25rem; border-radius: .5rem; font-size: .9rem; font-weight: 700;
+           cursor: pointer; border: none; }
+  .knapp-grøn { background: var(--green); color: #fff; }
+  .knapp-grøn:hover { background: var(--green2); }
+  .knapp-grå  { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .knapp-grå:hover  { border-color: var(--sel); }
+  .knapp-raud { background: var(--red); color: #fff; }
+  .knapp:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* Deltakarliste */
+  .deltakarliste { background: var(--card); border: 1px solid var(--border); border-radius: .75rem; overflow: hidden; }
+  .deltakarliste table { width: 100%; border-collapse: collapse; }
+  .deltakarliste th, .deltakarliste td { padding: .65rem 1rem; text-align: left; font-size: .88rem; }
+  .deltakarliste th { background: var(--bg2); color: var(--muted); font-size: .75rem; text-transform: uppercase; }
+  .deltakarliste tr:not(:first-child) td { border-top: 1px solid var(--border); }
+  .betalt-toggle { cursor: pointer; padding: .2rem .5rem; border-radius: .3rem; border: none;
+                   font-size: .8rem; font-weight: 700; }
+  .betalt-toggle.ja  { background: rgba(22,163,74,.2); color: var(--green); }
+  .betalt-toggle.nei { background: rgba(239,68,68,.2); color: var(--red); }
+
+  /* Rangering */
+  .rang-rad { display: flex; align-items: center; gap: .75rem; margin-bottom: .5rem; }
+  .rang-nr { font-weight: 700; color: var(--gold); min-width: 2.5rem; }
+  .rang-select {
+    flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
+    padding: .5rem; border-radius: .4rem; font-size: .9rem; outline: none;
+  }
+
+  /* Toast */
+  #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(5rem);
+           background: #1e293b; border: 1px solid var(--border); color: var(--text);
+           padding: .7rem 1.4rem; border-radius: .5rem; font-size: .9rem; z-index: 999;
+           transition: transform .3s; pointer-events: none; }
+  #toast.synleg { transform: translateX(-50%) translateY(0); }
+  #toast.ok   { border-color: var(--green); }
+  #toast.feil { border-color: var(--red); }
+
+  .seksjon { display: none; }
+  .seksjon.synleg { display: block; }
+  .seksjon-sil { margin-bottom: 2.5rem; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚙️ Admin – VM 2026</h1>
+  <nav>
+    <a href="index.html">Heim</a>
+    <a href="poengstavle.html">Poengtavle</a>
+    <a href="#" onclick="loggUt()">Logg ut</a>
+  </nav>
+</header>
+
+<!-- INNLOGGING -->
+<div id="innlogging-panel" class="innlogging">
+  <div style="font-size:2.5rem;margin-bottom:.75rem">🔒</div>
+  <h2>Admin-innlogging</h2>
+  <p style="color:var(--muted);font-size:.88rem;margin-bottom:1.25rem">Berre arrangør har tilgang</p>
+  <input type="password" id="passord-input" placeholder="Passord" onkeydown="if(event.key==='Enter')loggInn()">
+  <button class="knapp knapp-grøn" style="width:100%" onclick="loggInn()">Logg inn</button>
+</div>
+
+<!-- ADMIN-PANEL -->
+<main id="admin-panel" class="seksjon">
+  <h2 style="margin-bottom:.25rem">Admin-panel ⚙️</h2>
+  <p class="ingress">Legg inn VM-resultat og hald oversikt over deltakarane.</p>
+
+  <!-- R16 -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-r16">
+      <div class="runde-status-linje">
+        <h3>🏟️ Runde med 16 — vel 16 lag</h3>
+        <span class="status-badge vent" id="badge-r16">Ikkje sett inn</span>
+      </div>
+      <div class="teller-liten">Valt: <span id="teller-r16">0</span> / 16</div>
+      <div class="vel-grid" id="grid-r16"></div>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('r16', 16)" id="lagre-r16">Lagre R16</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('r16')">Slett</button>
+    </div>
+  </div>
+
+  <!-- QF -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-qf">
+      <div class="runde-status-linje">
+        <h3>⚡ Kvartfinale — vel 8 lag</h3>
+        <span class="status-badge vent" id="badge-qf">Ikkje sett inn</span>
+      </div>
+      <div class="teller-liten">Valt: <span id="teller-qf">0</span> / 8</div>
+      <div class="vel-grid" id="grid-qf"></div>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('qf', 8)">Lagre QF</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('qf')">Slett</button>
+    </div>
+  </div>
+
+  <!-- SF -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-sf">
+      <div class="runde-status-linje">
+        <h3>🔥 Semifinale — vel 4 lag</h3>
+        <span class="status-badge vent" id="badge-sf">Ikkje sett inn</span>
+      </div>
+      <div class="teller-liten">Valt: <span id="teller-sf">0</span> / 4</div>
+      <div class="vel-grid" id="grid-sf"></div>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('sf', 4)">Lagre SF</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('sf')">Slett</button>
+    </div>
+  </div>
+
+  <!-- Finale -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-finale">
+      <div class="runde-status-linje">
+        <h3>🏆 Finale — vel 2 lag</h3>
+        <span class="status-badge vent" id="badge-finale">Ikkje sett inn</span>
+      </div>
+      <div class="teller-liten">Valt: <span id="teller-finale">0</span> / 2</div>
+      <div class="vel-grid" id="grid-finale"></div>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('finale', 2)">Lagre finale</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('finale')">Slett</button>
+    </div>
+  </div>
+
+  <!-- Topp 4 -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-ranking">
+      <div class="runde-status-linje">
+        <h3>📊 Topp 4 — endeleg rangering</h3>
+        <span class="status-badge vent" id="badge-ranking">Ikkje sett inn</span>
+      </div>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:1rem">Vel kven som vann, kom på 2., 3. og 4. plass.</p>
+      <div id="rang-oppsett"></div>
+      <button class="knapp knapp-grøn" style="margin-top:.75rem" onclick="lagreRanking()">Lagre topp 4</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('ranking')">Slett</button>
+    </div>
+  </div>
+
+  <!-- Tipping stengd/open -->
+  <div class="seksjon-sil">
+    <div class="runde-kort">
+      <h3>🔒 Styr tipping</h3>
+      <p style="color:var(--muted);font-size:.88rem;margin-bottom:.75rem">
+        Tipping stengjer automatisk ved fristen i config.js (<strong id="frist-vis"></strong>).<br>
+        Du kan også stengja/opna manuelt her.
+      </p>
+      <button class="knapp knapp-grøn" onclick="setStengd(false)">Opna tipping</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="setStengd(true)">Stengj tipping</button>
+    </div>
+  </div>
+
+  <!-- Deltakarliste -->
+  <div class="seksjon-sil">
+    <h3 style="margin-bottom:.75rem">👥 Deltakarar</h3>
+    <div id="deltakarliste-container">
+      <div style="color:var(--muted)">Lastar…</div>
+    </div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.firestore();
+
+// ─── Autentisering ───────────────────────────────────────
+let loggtInn = false;
+
+function loggInn() {
+  const passord = document.getElementById("passord-input").value;
+  if (passord === APP.adminKode) {
+    loggtInn = true;
+    document.getElementById("innlogging-panel").style.display = "none";
+    document.getElementById("admin-panel").classList.add("synleg");
+    init();
+  } else {
+    visMelding("Feil passord!", "feil");
+  }
+}
+
+function loggUt() {
+  loggtInn = false;
+  document.getElementById("innlogging-panel").style.display = "block";
+  document.getElementById("admin-panel").classList.remove("synleg");
+  document.getElementById("passord-input").value = "";
+}
+
+// ─── State ───────────────────────────────────────────────
+const val = { r16: [], qf: [], sf: [], finale: [], ranking: [null, null, null, null] };
+let eksResltat = {};
+
+// ─── Init ────────────────────────────────────────────────
+async function init() {
+  document.getElementById("frist-vis").textContent =
+    new Date(APP.frist).toLocaleString("nn-NO");
+
+  // Last eksisterande resultat
+  const snap = await db.collection("resultater").doc("aktive").get();
+  if (snap.exists) {
+    eksResltat = snap.data();
+    if (eksResltat.r16)     val.r16     = [...eksResltat.r16];
+    if (eksResltat.qf)      val.qf      = [...eksResltat.qf];
+    if (eksResltat.sf)      val.sf      = [...eksResltat.sf];
+    if (eksResltat.finale)  val.finale  = [...eksResltat.finale];
+    if (eksResltat.ranking) val.ranking = [...eksResltat.ranking];
+  }
+
+  byggAlleGrids();
+  oppdaterAlleStatus();
+  lastDeltakarar();
+}
+
+// ─── Bygg grids ──────────────────────────────────────────
+function byggAlleGrids() {
+  byggGrid("grid-r16", ALLE_LAG, "r16", 16, "teller-r16");
+  byggGrid("grid-qf",  ALLE_LAG, "qf",  8,  "teller-qf");
+  byggGrid("grid-sf",  ALLE_LAG, "sf",  4,  "teller-sf");
+  byggGrid("grid-finale", ALLE_LAG, "finale", 2, "teller-finale");
+  byggRangGrid();
+}
+
+function byggGrid(gridId, lag, fase, maks, tellerId) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = "";
+  for (const l of lag) {
+    const btn = document.createElement("button");
+    btn.className = "vel-knapp";
+    btn.dataset.id = l.id;
+    btn.innerHTML = `${l.flag} ${l.namn}`;
+    if (val[fase].includes(l.id)) btn.classList.add("valt");
+    btn.addEventListener("click", () => {
+      const arr = val[fase];
+      if (arr.includes(l.id)) {
+        arr.splice(arr.indexOf(l.id), 1);
+        btn.classList.remove("valt");
+      } else {
+        arr.push(l.id);
+        btn.classList.add("valt");
+      }
+      document.getElementById(tellerId).textContent = arr.length;
+    });
+    grid.appendChild(btn);
+  }
+  document.getElementById(tellerId).textContent = val[fase].length;
+}
+
+function byggRangGrid() {
+  const container = document.getElementById("rang-oppsett");
+  const posnamn = ["🥇 1. plass (VM-meister)", "🥈 2. plass", "🥉 3. plass (bronsemeister)", "4. plass"];
+  container.innerHTML = "";
+  for (let i = 0; i < 4; i++) {
+    const div = document.createElement("div");
+    div.className = "rang-rad";
+    const sel = document.createElement("select");
+    sel.className = "rang-select";
+    sel.id = "rang-sel-" + i;
+    sel.innerHTML = `<option value="">— vel lag —</option>` +
+      ALLE_LAG.map(l => `<option value="${l.id}" ${val.ranking[i] === l.id ? "selected" : ""}>${l.flag} ${l.namn}</option>`).join("");
+    sel.addEventListener("change", () => { val.ranking[i] = sel.value || null; });
+    div.innerHTML = `<span class="rang-nr">${posnamn[i]}</span>`;
+    div.appendChild(sel);
+    container.appendChild(div);
+  }
+}
+
+// ─── Oppdater status-badges ──────────────────────────────
+function oppdaterAlleStatus() {
+  const rundar = ["r16", "qf", "sf", "finale", "ranking"];
+  for (const r of rundar) {
+    const har = r === "ranking"
+      ? (eksResltat.ranking && eksResltat.ranking.some(v => v))
+      : (eksResltat[r] && eksResltat[r].length > 0);
+    const badge = document.getElementById("badge-" + r);
+    const kort  = document.getElementById("kort-" + r);
+    if (har) {
+      badge.textContent = "✅ Lagra";
+      badge.className = "status-badge ok";
+      kort.classList.add("ferdig");
+    } else {
+      badge.textContent = "Ikkje sett inn";
+      badge.className = "status-badge vent";
+      kort.classList.remove("ferdig");
+    }
+  }
+}
+
+// ─── Lagre runde ─────────────────────────────────────────
+async function lagreRunde(fase, maks) {
+  if (val[fase].length !== maks) {
+    visMelding(`Vel nøyaktig ${maks} lag for ${fase.toUpperCase()}`, "feil");
+    return;
+  }
+  try {
+    await db.collection("resultater").doc("aktive").set(
+      { [fase]: val[fase] }, { merge: true }
+    );
+    eksResltat[fase] = [...val[fase]];
+    oppdaterAlleStatus();
+    visMelding(`${fase.toUpperCase()} lagra! ✅`, "ok");
+  } catch (e) { visMelding("Feil: " + e.message, "feil"); }
+}
+
+async function lagreRanking() {
+  if (val.ranking.some(v => !v)) {
+    visMelding("Fyll inn alle 4 plassar", "feil"); return;
+  }
+  const unik = new Set(val.ranking);
+  if (unik.size !== 4) { visMelding("Kvart lag kan berre vera på éin plass", "feil"); return; }
+  try {
+    await db.collection("resultater").doc("aktive").set(
+      { ranking: val.ranking }, { merge: true }
+    );
+    eksResltat.ranking = [...val.ranking];
+    oppdaterAlleStatus();
+    visMelding("Topp 4 lagra! ✅", "ok");
+  } catch (e) { visMelding("Feil: " + e.message, "feil"); }
+}
+
+async function slettRunde(fase) {
+  if (!confirm(`Er du sikker på at du vil sletta ${fase}?`)) return;
+  try {
+    await db.collection("resultater").doc("aktive").set(
+      { [fase]: firebase.firestore.FieldValue.delete() }, { merge: true }
+    );
+    eksResltat[fase] = null;
+    if (fase !== "ranking") val[fase] = [];
+    else val.ranking = [null, null, null, null];
+    byggAlleGrids();
+    oppdaterAlleStatus();
+    visMelding(`${fase} sletta`, "ok");
+  } catch (e) { visMelding("Feil: " + e.message, "feil"); }
+}
+
+// ─── Styr tipping ────────────────────────────────────────
+async function setStengd(stengd) {
+  try {
+    await db.collection("resultater").doc("aktive").set(
+      { stengd }, { merge: true }
+    );
+    visMelding(stengd ? "Tipping er no stengd" : "Tipping er no open", "ok");
+  } catch (e) { visMelding("Feil: " + e.message, "feil"); }
+}
+
+// ─── Deltakarliste ───────────────────────────────────────
+async function lastDeltakarar() {
+  const container = document.getElementById("deltakarliste-container");
+  try {
+    const snap = await db.collection("tippers").get();
+    if (snap.empty) {
+      container.innerHTML = '<p style="color:var(--muted)">Ingen deltakarar enno.</p>';
+      return;
+    }
+    const resultatSnap = await db.collection("resultater").doc("aktive").get();
+    const res = resultatSnap.exists ? resultatSnap.data() : {};
+
+    let html = `<div class="deltakarliste"><table>
+      <tr><th>#</th><th>Namn</th><th>E-post</th><th>Poeng</th><th>Betalt</th><th>Tid</th></tr>`;
+
+    const deltakarar = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+      .map(d => ({ ...d, poeng: beregnPoeng(d, res).poeng }))
+      .sort((a, b) => b.poeng - a.poeng);
+
+    deltakarar.forEach((d, i) => {
+      const tid = d.tidspunkt ? new Date(d.tidspunkt.toDate()).toLocaleString("nn-NO") : "—";
+      html += `<tr>
+        <td>${i + 1}</td>
+        <td>${d.namn || "?"}</td>
+        <td>${d.epost || "?"}</td>
+        <td style="font-weight:700;color:var(--gold)">${d.poeng}</td>
+        <td>
+          <button class="betalt-toggle ${d.betalt ? "ja" : "nei"}"
+            onclick="toggleBetalt('${d.id}', ${!d.betalt}, this)">
+            ${d.betalt ? "✅ Ja" : "❌ Nei"}
+          </button>
+        </td>
+        <td style="font-size:.78rem;color:var(--muted)">${tid}</td>
+      </tr>`;
+    });
+
+    html += "</table></div>";
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<p style="color:var(--muted)">Klarte ikkje lasta deltakarar.</p>';
+  }
+}
+
+async function toggleBetalt(id, nyVerdi, btn) {
+  try {
+    await db.collection("tippers").doc(id).update({ betalt: nyVerdi });
+    btn.className = "betalt-toggle " + (nyVerdi ? "ja" : "nei");
+    btn.textContent = nyVerdi ? "✅ Ja" : "❌ Nei";
+    btn.onclick = () => toggleBetalt(id, !nyVerdi, btn);
+    visMelding("Betalingsstatus oppdatert", "ok");
+  } catch (e) { visMelding("Feil: " + e.message, "feil"); }
+}
+
+// ─── Toast ───────────────────────────────────────────────
+let toastTimer;
+function visMelding(tekst, type = "ok") {
+  const el = document.getElementById("toast");
+  el.textContent = tekst;
+  el.className = "synleg " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ""; }, 3500);
+}
+</script>
+</body>
+</html>
