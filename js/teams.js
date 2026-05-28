@@ -117,11 +117,15 @@ function lagPerKonf() {
   return res;
 }
 
-// Poengrekning
+// Poengrekning (maks 66 poeng: 32+16+8+4+2+4)
 function beregnPoeng(tips, resultat) {
   let poeng = 0;
-  const detaljar = { r16: 0, qf: 0, sf: 0, finale: 0, ranking: 0 };
+  const detaljar = { r32: 0, r16: 0, qf: 0, sf: 0, finale: 0, ranking: 0 };
 
+  if (resultat.r32 && tips.r32) {
+    detaljar.r32 = tips.r32.filter(id => resultat.r32.includes(id)).length;
+    poeng += detaljar.r32;
+  }
   if (resultat.r16 && tips.r16) {
     detaljar.r16 = tips.r16.filter(id => resultat.r16.includes(id)).length;
     poeng += detaljar.r16;
