@@ -143,16 +143,30 @@
   <h2 style="margin-bottom:.25rem">Admin-panel ⚙️</h2>
   <p class="ingress">Legg inn VM-resultat og hald oversikt over deltakarane.</p>
 
+  <!-- R32 -->
+  <div class="seksjon-sil">
+    <div class="runde-kort" id="kort-r32">
+      <div class="runde-status-linje">
+        <h3>🏟️ 16.-delsfinale — vel 32 lag</h3>
+        <span class="status-badge vent" id="badge-r32">Ikkje sett inn</span>
+      </div>
+      <div class="teller-liten">Valt: <span id="teller-r32">0</span> / 32</div>
+      <div class="vel-grid" id="grid-r32"></div>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('r32', 32)">Lagre R32</button>
+      <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('r32')">Slett</button>
+    </div>
+  </div>
+
   <!-- R16 -->
   <div class="seksjon-sil">
     <div class="runde-kort" id="kort-r16">
       <div class="runde-status-linje">
-        <h3>🏟️ Runde med 16 — vel 16 lag</h3>
+        <h3>⚡ Åttandedelsfinale — vel 16 lag</h3>
         <span class="status-badge vent" id="badge-r16">Ikkje sett inn</span>
       </div>
       <div class="teller-liten">Valt: <span id="teller-r16">0</span> / 16</div>
       <div class="vel-grid" id="grid-r16"></div>
-      <button class="knapp knapp-grøn" onclick="lagreRunde('r16', 16)" id="lagre-r16">Lagre R16</button>
+      <button class="knapp knapp-grøn" onclick="lagreRunde('r16', 16)">Lagre R16</button>
       <button class="knapp knapp-raud" style="margin-left:.5rem" onclick="slettRunde('r16')">Slett</button>
     </div>
   </div>
@@ -265,7 +279,7 @@ function loggUt() {
 }
 
 // ─── State ───────────────────────────────────────────────
-const val = { r16: [], qf: [], sf: [], finale: [], ranking: [null, null, null, null] };
+const val = { r32: [], r16: [], qf: [], sf: [], finale: [], ranking: [null, null, null, null] };
 let eksResltat = {};
 
 // ─── Init ────────────────────────────────────────────────
@@ -277,6 +291,7 @@ async function init() {
   const snap = await db.collection("resultater").doc("aktive").get();
   if (snap.exists) {
     eksResltat = snap.data();
+    if (eksResltat.r32)     val.r32     = [...eksResltat.r32];
     if (eksResltat.r16)     val.r16     = [...eksResltat.r16];
     if (eksResltat.qf)      val.qf      = [...eksResltat.qf];
     if (eksResltat.sf)      val.sf      = [...eksResltat.sf];
@@ -291,6 +306,7 @@ async function init() {
 
 // ─── Bygg grids ──────────────────────────────────────────
 function byggAlleGrids() {
+  byggGrid("grid-r32", ALLE_LAG, "r32", 32, "teller-r32");
   byggGrid("grid-r16", ALLE_LAG, "r16", 16, "teller-r16");
   byggGrid("grid-qf",  ALLE_LAG, "qf",  8,  "teller-qf");
   byggGrid("grid-sf",  ALLE_LAG, "sf",  4,  "teller-sf");
@@ -344,7 +360,7 @@ function byggRangGrid() {
 
 // ─── Oppdater status-badges ──────────────────────────────
 function oppdaterAlleStatus() {
-  const rundar = ["r16", "qf", "sf", "finale", "ranking"];
+  const rundar = ["r32", "r16", "qf", "sf", "finale", "ranking"];
   for (const r of rundar) {
     const har = r === "ranking"
       ? (eksResltat.ranking && eksResltat.ranking.some(v => v))

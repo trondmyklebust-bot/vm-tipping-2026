@@ -182,7 +182,8 @@ async function lastData() {
 
 function visRundeStatus(resultat) {
   const rundar = [
-    { key: "r16",    namn: "Runde med 16" },
+    { key: "r32",    namn: "16.-delsfinale" },
+    { key: "r16",    namn: "Åttandedelsfinale" },
     { key: "qf",     namn: "Kvartfinale" },
     { key: "sf",     namn: "Semifinale" },
     { key: "finale", namn: "Finale" },
@@ -210,6 +211,7 @@ function visPoengtavle(tippers, resultat) {
     return { ...t, poeng, detaljar };
   }).sort((a, b) => b.poeng - a.poeng || a.namn.localeCompare(b.namn));
 
+  const harR32    = !!(resultat.r32 && resultat.r32.length);
   const harR16    = !!(resultat.r16 && resultat.r16.length);
   const harQF     = !!(resultat.qf  && resultat.qf.length);
   const harSF     = !!(resultat.sf  && resultat.sf.length);
@@ -221,11 +223,12 @@ function visPoengtavle(tippers, resultat) {
       <div class="tavle-header">
         <div>#</div>
         <div>Namn</div>
-        <div class="skjul-mobil">R16</div>
+        <div class="skjul-mobil">32</div>
+        <div class="skjul-mobil">16</div>
         <div class="skjul-mobil">QF</div>
         <div class="skjul-mobil">SF</div>
-        <div class="skjul-mobil">Finale</div>
-        <div class="skjul-mobil">Topp4</div>
+        <div class="skjul-mobil">Fin</div>
+        <div class="skjul-mobil">Top4</div>
         <div>Sum</div>
       </div>`;
 
@@ -246,6 +249,7 @@ function visPoengtavle(tippers, resultat) {
           ${t.namn}
           <small>${t.epost || ""}</small>
         </div>
+        ${celleEl(t.detaljar.r32, harR32)}
         ${celleEl(t.detaljar.r16, harR16)}
         ${celleEl(t.detaljar.qf,  harQF)}
         ${celleEl(t.detaljar.sf,  harSF)}
@@ -274,10 +278,11 @@ function visPoengtavle(tippers, resultat) {
 
 function byggDetaljarHTML(tips, res) {
   const fasar = [
-    { key: "r16",    tittel: "🏟️ Runde med 16", resKey: "r16" },
-    { key: "qf",     tittel: "⚡ Kvartfinale",   resKey: "qf" },
-    { key: "sf",     tittel: "🔥 Semifinale",    resKey: "sf" },
-    { key: "finale", tittel: "🏆 Finale",         resKey: "finale" },
+    { key: "r32",    tittel: "🏟️ 16.-delsfinale",       resKey: "r32" },
+    { key: "r16",    tittel: "⚡ Åttandedelsfinale",     resKey: "r16" },
+    { key: "qf",     tittel: "🎯 Kvartfinale",           resKey: "qf" },
+    { key: "sf",     tittel: "🔥 Semifinale",            resKey: "sf" },
+    { key: "finale", tittel: "🏆 Finale",                resKey: "finale" },
   ];
   let html = "";
   for (const f of fasar) {
