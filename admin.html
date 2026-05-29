@@ -6,6 +6,7 @@
 <title>Admin – VM-tipping 2026 ⚽</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <script src="js/config.js"></script>
 <script src="js/teams.js"></script>
 <style>
@@ -14,7 +15,6 @@
     --bg2:    #122036;
     --card:   #1a2d45;
     --green:  #16a34a;
-    --green2: #15803d;
     --gold:   #f59e0b;
     --text:   #e2e8f0;
     --muted:  #94a3b8;
@@ -30,19 +30,28 @@
   .login-wrap { display: flex; align-items: center; justify-content: center;
                 min-height: 100vh; padding: 1.5rem; }
   .login-boks { background: var(--card); border: 1px solid var(--border); border-radius: .75rem;
-                padding: 2rem; width: 100%; max-width: 360px; text-align: center; }
-  .login-boks h1 { font-size: 1.4rem; margin-bottom: 1.5rem; }
+                padding: 2rem; width: 100%; max-width: 380px; text-align: center; }
+  .login-boks h1 { font-size: 1.4rem; margin-bottom: .4rem; }
+  .login-boks .sub { font-size: .85rem; color: var(--muted); margin-bottom: 1.5rem; }
+  .login-boks label { display: block; text-align: left; font-size: .82rem;
+                      color: var(--muted); margin-bottom: .3rem; margin-top: .75rem; }
   .login-boks input { width: 100%; padding: .75rem 1rem; background: var(--bg2);
-                       border: 1px solid var(--border); border-radius: .5rem; color: var(--text);
-                       font-size: 1rem; margin-bottom: 1rem; }
+                      border: 1px solid var(--border); border-radius: .5rem; color: var(--text);
+                      font-size: 1rem; }
   .login-boks input:focus { outline: none; border-color: var(--sel); }
-  .feil-melding { color: var(--red); font-size: .88rem; margin-top: .5rem; }
+  .feil-melding { color: var(--red); font-size: .85rem; margin-top: .75rem; min-height: 1.2em; }
 
   /* App */
   #app { display: none; }
   header { background: var(--bg2); border-bottom: 1px solid var(--border);
-           padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+           padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
+           flex-wrap: wrap; gap: .5rem; }
   header h1 { font-size: 1.2rem; font-weight: 700; }
+  .header-høgre { display: flex; align-items: center; gap: 1rem; }
+  .innlogga-som { font-size: .82rem; color: var(--muted); }
+  .logg-ut-knapp { background: none; border: 1px solid var(--border); color: var(--muted);
+                   padding: .3rem .75rem; border-radius: .4rem; cursor: pointer; font-size: .82rem; }
+  .logg-ut-knapp:hover { border-color: var(--red); color: var(--red); }
   header nav a { color: var(--muted); margin-left: 1rem; font-size: .9rem; }
 
   main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
@@ -54,13 +63,11 @@
   .tier-seksjon h3 { font-size: 1rem; font-weight: 700; margin-bottom: .3rem; color: var(--gold); }
   .tier-seksjon .hint { font-size: .82rem; color: var(--muted); margin-bottom: .85rem; }
 
-  /* Enkelt-dropdown (p1-p4) */
   .lag-select { width: 100%; padding: .65rem 1rem; background: var(--bg2);
                 border: 1px solid var(--border); border-radius: .5rem; color: var(--text);
                 font-size: .95rem; cursor: pointer; }
   .lag-select:focus { outline: none; border-color: var(--sel); }
 
-  /* Flerval-knapp-grid (p5_8, p9_16) */
   .lag-grid { display: flex; flex-wrap: wrap; gap: .5rem; }
   .lag-knapp {
     display: flex; align-items: center; gap: .35rem;
@@ -76,7 +83,6 @@
   .tal-indikator.ok   { color: var(--green); }
   .tal-indikator.over { color: var(--red); }
 
-  /* Lagre-seksjon */
   .lagre-boks { background: var(--card); border: 1px solid var(--border);
                 border-radius: .75rem; padding: 1.5rem; margin-bottom: 2rem; text-align: center; }
   .lagre-boks p { color: var(--muted); margin-bottom: 1rem; font-size: .9rem; }
@@ -107,7 +113,6 @@
   .spinner { animation: snurr 1s linear infinite; display: inline-block; }
   @keyframes snurr { to { transform: rotate(360deg); } }
 
-  /* Slett-seksjon */
   .slett-boks { background: var(--card); border: 1px solid var(--red);
                 border-radius: .75rem; padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
   .slett-boks h3 { color: var(--red); margin-bottom: .5rem; }
@@ -123,9 +128,13 @@
 <div class="login-wrap" id="login-skjerm">
   <div class="login-boks">
     <h1>🔐 Admin</h1>
-    <input type="password" id="passord-input" placeholder="Passord" autocomplete="current-password">
-    <button class="knapp knapp-grøn" onclick="loggInn()" style="width:100%">Logg inn</button>
+    <p class="sub">Logg inn med Firebase-kontoen din</p>
+    <label>E-postadresse</label>
+    <input type="email" id="inp-admin-epost" placeholder="admin@eksempel.no" autocomplete="email">
+    <label>Passord</label>
+    <input type="password" id="inp-admin-passord" placeholder="Passord" autocomplete="current-password">
     <div class="feil-melding" id="feil-melding"></div>
+    <button class="knapp knapp-grøn" onclick="loggInn()" style="width:100%;margin-top:1.25rem">Logg inn</button>
   </div>
 </div>
 
@@ -133,10 +142,14 @@
 <div id="app">
   <header>
     <h1>⚙️ Admin – VM-tipping 2026</h1>
-    <nav>
-      <a href="index.html">Heim</a>
-      <a href="poengstavle.html">Poengtavle</a>
-    </nav>
+    <div class="header-høgre">
+      <span class="innlogga-som" id="innlogga-som"></span>
+      <button class="logg-ut-knapp" onclick="loggUt()">Logg ut</button>
+      <nav>
+        <a href="index.html">Heim</a>
+        <a href="poengstavle.html">Poengtavle</a>
+      </nav>
+    </div>
   </header>
 
   <main>
@@ -223,26 +236,63 @@
 
 <script>
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+const db   = firebase.firestore();
+const auth = firebase.auth();
 
-// ── Login ─────────────────────────────────────────────────────
-document.getElementById("passord-input").addEventListener("keydown", e => {
-  if (e.key === "Enter") loggInn();
-});
-
-function loggInn() {
-  const kode = document.getElementById("passord-input").value.trim();
-  if (kode === APP.adminKode) {
+// ── Auth-tilstand ─────────────────────────────────────────────
+auth.onAuthStateChanged(brukar => {
+  if (brukar) {
     document.getElementById("login-skjerm").style.display = "none";
     document.getElementById("app").style.display = "block";
+    document.getElementById("innlogga-som").textContent = brukar.email;
     init();
   } else {
-    document.getElementById("feil-melding").textContent = "Feil passord. Prøv igjen.";
+    document.getElementById("login-skjerm").style.display = "";
+    document.getElementById("app").style.display = "none";
+  }
+});
+
+// ── Login ─────────────────────────────────────────────────────
+["inp-admin-epost", "inp-admin-passord"].forEach(id => {
+  document.getElementById(id).addEventListener("keydown", e => {
+    if (e.key === "Enter") loggInn();
+  });
+});
+
+async function loggInn() {
+  const epost   = document.getElementById("inp-admin-epost").value.trim();
+  const passord = document.getElementById("inp-admin-passord").value;
+  const feilEl  = document.getElementById("feil-melding");
+  feilEl.textContent = "";
+
+  if (!epost || !passord) {
+    feilEl.textContent = "Fyll inn e-post og passord.";
+    return;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(epost, passord);
+    // onAuthStateChanged handterer resten
+  } catch (e) {
+    const meldingar = {
+      "auth/user-not-found":   "Fann inga brukar med denne e-postadressa.",
+      "auth/wrong-password":   "Feil passord.",
+      "auth/invalid-email":    "Ugyldig e-postadresse.",
+      "auth/too-many-requests":"For mange forsøk. Prøv igjen seinare.",
+      "auth/invalid-credential": "Feil e-post eller passord.",
+    };
+    feilEl.textContent = meldingar[e.code] || "Innlogging feila: " + e.message;
   }
 }
 
+async function loggUt() {
+  await auth.signOut();
+}
+
 // ── Init ──────────────────────────────────────────────────────
+let erInitialisert = false;
 async function init() {
+  if (erInitialisert) return;
+  erInitialisert = true;
   fyllDropdowns();
   byggKnappGrids();
   await lastResultat();
