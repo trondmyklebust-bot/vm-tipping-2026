@@ -10,107 +10,130 @@
 <script src="js/teams.js"></script>
 <style>
   :root {
-    --bg:      #0d1b2e;
-    --bg2:     #122036;
-    --card:    #1a2d45;
-    --green:   #16a34a;
-    --green2:  #15803d;
-    --gold:    #f59e0b;
-    --text:    #e2e8f0;
-    --muted:   #94a3b8;
-    --border:  #2a3f5f;
-    --red:     #ef4444;
-    --sel:     #0ea5e9;
+    --bg:     #0d1b2e;
+    --bg2:    #122036;
+    --card:   #1a2d45;
+    --green:  #16a34a;
+    --green2: #15803d;
+    --gold:   #f59e0b;
+    --text:   #e2e8f0;
+    --muted:  #94a3b8;
+    --border: #2a3f5f;
+    --sel:    #0ea5e9;
+    --red:    #ef4444;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; min-height: 100vh; }
   a { color: var(--sel); text-decoration: none; }
 
-  header { background: var(--bg2); border-bottom: 1px solid var(--border); padding: 1rem 1.5rem;
-           display: flex; align-items: center; justify-content: space-between; }
+  header { background: var(--bg2); border-bottom: 1px solid var(--border);
+           padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; }
   header h1 { font-size: 1.25rem; font-weight: 700; }
   header nav a { color: var(--muted); margin-left: 1rem; font-size: .9rem; }
 
-  /* Steg-indikator */
-  .steps { display: flex; justify-content: center; gap: .35rem; padding: 1.25rem 1rem .4rem; flex-wrap: wrap; }
-  .step-dot { width: 1.9rem; height: 1.9rem; border-radius: 50%; display: flex; align-items: center;
-              justify-content: center; font-size: .75rem; font-weight: 700;
+  /* Steg-dots */
+  .steps { display: flex; justify-content: center; gap: .5rem; padding: 1.25rem 1rem .5rem; }
+  .step-dot { width: 2rem; height: 2rem; border-radius: 50%; display: flex; align-items: center;
+              justify-content: center; font-size: .8rem; font-weight: 700;
               background: var(--card); border: 2px solid var(--border); color: var(--muted); transition: all .3s; }
   .step-dot.aktiv  { background: var(--green); border-color: var(--green); color: #fff; }
   .step-dot.ferdig { background: var(--bg2); border-color: var(--green); color: var(--green); }
 
-  main { max-width: 860px; margin: 0 auto; padding: 1.5rem; }
+  main { max-width: 900px; margin: 0 auto; padding: 1.5rem; }
   .seksjon { display: none; }
   .seksjon.synleg { display: block; }
 
-  h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: .4rem; }
-  .ingress { color: var(--muted); font-size: .95rem; margin-bottom: 1.5rem; }
-  .teller { display: inline-block; background: var(--green); color: #fff; padding: .2rem .7rem;
-            border-radius: 9999px; font-size: .85rem; font-weight: 700; margin-left: .5rem; }
-  .teller.over { background: var(--red); }
+  h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: .4rem; }
+  .ingress { color: var(--muted); font-size: .92rem; margin-bottom: 1.5rem; line-height: 1.5; }
+
+  /* Teller-badge */
+  .badge { display: inline-block; padding: .2rem .65rem; border-radius: 9999px;
+           font-size: .82rem; font-weight: 700; background: var(--green); color: #fff; margin-left: .4rem; }
+  .badge.over { background: var(--red); }
 
   /* Input */
   .input-gruppe { margin-bottom: 1rem; }
   label { display: block; font-size: .9rem; color: var(--muted); margin-bottom: .4rem; }
-  input[type=text], input[type=email] {
-    width: 100%; padding: .75rem 1rem; border-radius: .5rem;
-    background: var(--card); border: 1px solid var(--border); color: var(--text);
-    font-size: 1rem; outline: none; transition: border .2s;
-  }
+  input { width: 100%; padding: .75rem 1rem; border-radius: .5rem;
+          background: var(--card); border: 1px solid var(--border); color: var(--text);
+          font-size: 1rem; outline: none; transition: border .2s; }
   input:focus { border-color: var(--sel); }
 
-  /* Lagkort */
-  .konf-gruppe { margin-bottom: 1.25rem; }
-  .konf-tittel { font-size: .8rem; font-weight: 700; color: var(--muted); letter-spacing: .06em;
-                 text-transform: uppercase; margin-bottom: .5rem; }
-  .lag-grid { display: flex; flex-wrap: wrap; gap: .45rem; }
-  .lag-knapp {
-    display: flex; align-items: center; gap: .35rem;
-    padding: .4rem .8rem; border-radius: .4rem; font-size: .88rem; font-weight: 600;
+  /* ── Steg 2: vel 16 lag ──────────────────────── */
+  .gruppe-blokk { margin-bottom: 1.25rem; }
+  .gruppe-tittel { font-size: .78rem; font-weight: 700; letter-spacing: .06em;
+                   text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+  .lag-rad { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .lagbtn {
+    padding: .38rem .75rem; border-radius: .4rem; font-size: .86rem; font-weight: 600;
     background: var(--card); border: 2px solid var(--border); color: var(--text);
-    cursor: pointer; user-select: none; transition: all .15s;
+    cursor: pointer; user-select: none; transition: all .12s;
   }
-  .lag-knapp:hover { border-color: var(--sel); }
-  .lag-knapp.valt { background: var(--green); border-color: var(--green); color: #fff; }
-  .lag-knapp.deaktivert { opacity: .35; cursor: not-allowed; }
+  .lagbtn:hover { border-color: var(--sel); }
+  .lagbtn.valt { background: var(--green); border-color: var(--green); color: #fff; }
 
-  /* Rangering */
-  .rangering-liste { list-style: none; }
-  .rangering-rad {
-    display: flex; align-items: center; gap: .75rem;
-    background: var(--card); border: 1px solid var(--border); border-radius: .5rem;
-    padding: .7rem 1rem; margin-bottom: .5rem;
+  /* ── Steg 3: plassering ──────────────────────── */
+  .plassering-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .plassering-layout { grid-template-columns: 1fr; } }
+
+  .tier-kort {
+    background: var(--card); border: 2px solid var(--border); border-radius: .6rem;
+    padding: .85rem 1rem; transition: border-color .2s;
   }
-  .rang-nr { font-size: 1rem; font-weight: 700; color: var(--gold); min-width: 12rem; }
-  .rang-select {
-    flex: 1; background: var(--bg2); border: 1px solid var(--border); color: var(--text);
-    padding: .5rem; border-radius: .4rem; font-size: .92rem; outline: none;
+  .tier-kort.aktiv-target { border-color: var(--sel); background: rgba(14,165,233,.08); }
+  .tier-tittel { font-size: .82rem; font-weight: 700; color: var(--muted);
+                 text-transform: uppercase; letter-spacing: .05em; margin-bottom: .55rem; }
+  .tier-slots { display: flex; flex-wrap: wrap; gap: .35rem; min-height: 2rem; }
+  .tier-slot {
+    padding: .3rem .7rem; border-radius: .35rem; font-size: .84rem; font-weight: 600;
+    background: var(--bg2); border: 1px dashed var(--border); color: var(--muted);
+    cursor: pointer; transition: all .12s; display: flex; align-items: center; gap: .3rem;
   }
-  .rang-select:focus { border-color: var(--sel); }
+  .tier-slot.fylt { background: var(--green); border: 2px solid var(--green); color: #fff; border-style: solid; }
+  .tier-slot.fylt:hover { background: var(--red); border-color: var(--red); }
+  .tom-slot { padding: .3rem .7rem; border-radius: .35rem; font-size: .8rem;
+              color: var(--muted); border: 1px dashed var(--border); background: transparent;
+              font-style: italic; }
+
+  /* Pool (uplacerte lag) */
+  .pool-seksjon { margin-top: 1.25rem; }
+  .pool-tittel { font-size: .85rem; font-weight: 700; color: var(--gold); margin-bottom: .5rem; }
+  .pool-rad { display: flex; flex-wrap: wrap; gap: .4rem; }
+  .poolbtn {
+    padding: .38rem .75rem; border-radius: .4rem; font-size: .86rem; font-weight: 600;
+    background: var(--card); border: 2px solid var(--border); color: var(--text);
+    cursor: pointer; transition: all .12s;
+  }
+  .poolbtn:hover { border-color: var(--gold); }
+  .poolbtn.aktiv { background: var(--gold); border-color: var(--gold); color: #000; }
+
+  /* Hint */
+  .hint { background: rgba(14,165,233,.1); border: 1px solid var(--sel); border-radius: .5rem;
+          padding: .6rem 1rem; font-size: .85rem; color: var(--sel); margin-bottom: 1rem; }
 
   /* Oppsummering */
-  .oppsummering-seksjon { margin-bottom: 1.5rem; }
-  .oppsummering-seksjon h3 { font-size: 1rem; font-weight: 700; color: var(--gold); margin-bottom: .5rem; }
-  .lag-chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .ops-tier { margin-bottom: 1rem; }
+  .ops-tier h4 { font-size: .9rem; font-weight: 700; color: var(--gold); margin-bottom: .4rem; }
+  .chip-rad { display: flex; flex-wrap: wrap; gap: .35rem; }
   .chip { background: var(--card); border: 1px solid var(--border); border-radius: 9999px;
-          padding: .2rem .7rem; font-size: .82rem; }
+          padding: .2rem .65rem; font-size: .82rem; }
 
   /* Vipps */
   .vipps-boks { background: var(--card); border: 1px solid var(--gold); border-radius: .75rem;
-                padding: 1.25rem 1.5rem; margin: 1.5rem 0; }
-  .vipps-boks h3 { font-size: 1.1rem; font-weight: 700; color: var(--gold); margin-bottom: .5rem; }
-  .vipps-boks p { color: var(--muted); font-size: .9rem; margin-bottom: .4rem; }
-  .vipps-nr { font-size: 1.5rem; font-weight: 700; color: #fff; }
+                padding: 1.2rem 1.5rem; margin: 1.5rem 0; }
+  .vipps-boks h3 { color: var(--gold); margin-bottom: .5rem; }
+  .vipps-boks p  { color: var(--muted); font-size: .9rem; margin-bottom: .3rem; }
+  .vipps-nr { font-size: 1.4rem; font-weight: 700; }
 
   /* Knappar */
   .knapp-rad { display: flex; gap: .75rem; margin-top: 1.5rem; justify-content: flex-end; flex-wrap: wrap; }
   .knapp { padding: .7rem 1.4rem; border-radius: .5rem; font-size: 1rem; font-weight: 700;
-           cursor: pointer; border: none; transition: opacity .2s; }
+           cursor: pointer; border: none; }
   .knapp-grøn { background: var(--green); color: #fff; }
   .knapp-grøn:hover { background: var(--green2); }
-  .knapp-grå { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+  .knapp-grøn:disabled { opacity: .45; cursor: not-allowed; }
+  .knapp-grå  { background: var(--card); color: var(--text); border: 1px solid var(--border); }
   .knapp-grå:hover { border-color: var(--sel); }
-  .knapp:disabled { opacity: .45; cursor: not-allowed; }
 
   /* Toast */
   #toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(5rem);
@@ -124,15 +147,7 @@
   .fullfort { text-align: center; padding: 3rem 1rem; }
   .fullfort .ikon { font-size: 4rem; margin-bottom: 1rem; }
   .fullfort h2 { font-size: 2rem; margin-bottom: .75rem; }
-  .fullfort p { color: var(--muted); margin-bottom: 1.5rem; }
-
-  .stengd { text-align: center; padding: 3rem 1rem; }
-
-  @media (max-width: 600px) {
-    .lag-knapp { padding: .35rem .65rem; font-size: .8rem; }
-    h2 { font-size: 1.2rem; }
-    .rang-nr { min-width: 8rem; font-size: .85rem; }
-  }
+  .fullfort p  { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -145,29 +160,25 @@
   </nav>
 </header>
 
-<div class="steps" id="steg-indikator">
+<div class="steps" id="steg-dots">
   <div class="step-dot aktiv" id="dot-1" title="Identitet">1</div>
-  <div class="step-dot" id="dot-2" title="16.-delsfinale (32 lag)">2</div>
-  <div class="step-dot" id="dot-3" title="Åttandedelsfinale (16 lag)">3</div>
-  <div class="step-dot" id="dot-4" title="Kvartfinale (8 lag)">4</div>
-  <div class="step-dot" id="dot-5" title="Semifinale (4 lag)">5</div>
-  <div class="step-dot" id="dot-6" title="Finale (2 lag)">6</div>
-  <div class="step-dot" id="dot-7" title="Topp 4">7</div>
-  <div class="step-dot" id="dot-8" title="Stadfest">8</div>
+  <div class="step-dot"       id="dot-2" title="Vel 16 lag">2</div>
+  <div class="step-dot"       id="dot-3" title="Plasser laga">3</div>
+  <div class="step-dot"       id="dot-4" title="Stadfest">4</div>
 </div>
 
 <main>
 
   <!-- STEG 1: Identitet -->
   <section class="seksjon synleg" id="steg-1">
-    <h2>Velkommen, tippar!</h2>
-    <p class="ingress">Fyll inn namn og e-post for å starta. Same e-post hentar att eit tidlegare tipp.</p>
+    <h2>Velkommen!</h2>
+    <p class="ingress">Fyll inn namn og e-post. Brukar du same e-post seinare hentar du att tippet ditt.</p>
     <div class="input-gruppe">
-      <label for="inp-namn">Fullt namn</label>
+      <label>Fullt namn</label>
       <input type="text" id="inp-namn" placeholder="Ola Nordmann" autocomplete="name">
     </div>
     <div class="input-gruppe">
-      <label for="inp-epost">E-postadresse</label>
+      <label>E-postadresse</label>
       <input type="email" id="inp-epost" placeholder="ola@eksempel.no" autocomplete="email">
     </div>
     <div class="knapp-rad">
@@ -175,86 +186,55 @@
     </div>
   </section>
 
-  <!-- STEG 2: 16.-delsfinale — vel 32 av 48 -->
+  <!-- STEG 2: Vel 16 lag -->
   <section class="seksjon" id="steg-2">
-    <h2>16.-delsfinale <span class="teller" id="teller-r32">0 / 32</span></h2>
-    <p class="ingress">Vel dei 32 laga du trur kjem seg vidare frå gruppespelet. Laga er sorterte etter VM-gruppe.</p>
-    <div id="lag-grid-r32"></div>
+    <h2>Vel dine 16 lag <span class="badge" id="teller2">0 / 16</span></h2>
+    <p class="ingress">
+      Klikk på dei 16 laga du trur kjem til åttandedelsfinalen. Laga er sorterte etter VM-gruppe.
+    </p>
+    <div id="gruppe-grid"></div>
     <div class="knapp-rad">
       <button class="knapp knapp-grå" onclick="gåTil(1)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-r32" onclick="gåTil(3)" disabled>Neste →</button>
+      <button class="knapp knapp-grøn" id="neste-2" onclick="gåTil(3)" disabled>Neste →</button>
     </div>
   </section>
 
-  <!-- STEG 3: Åttandedelsfinale — vel 16 av 32 -->
+  <!-- STEG 3: Plassering -->
   <section class="seksjon" id="steg-3">
-    <h2>Åttandedelsfinale <span class="teller" id="teller-r16">0 / 16</span></h2>
-    <p class="ingress">Vel 16 av dei 32 laga du valde — desse trur du kjem til åttandedelsfinalen.</p>
-    <div id="lag-grid-r16" class="lag-grid"></div>
+    <h2>Plasser laga</h2>
+    <p class="ingress">
+      Klikk eit lag nedst i «Uplacerte lag», og klikk deretter ein plass for å leggja det der.
+      Klikk eit lag som allereie er plassert for å flytta det tilbake til poolen.
+    </p>
+    <div class="hint" id="hint-tekst">👆 Klikk eit lag frå «Uplacerte lag» for å starta</div>
+
+    <div class="plassering-layout" id="tier-grid"></div>
+
+    <div class="pool-seksjon">
+      <div class="pool-tittel">Uplacerte lag (<span id="pool-teller">0</span>)</div>
+      <div class="pool-rad" id="pool-rad"></div>
+    </div>
+
     <div class="knapp-rad">
       <button class="knapp knapp-grå" onclick="gåTil(2)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-r16" onclick="gåTil(4)" disabled>Neste →</button>
+      <button class="knapp knapp-grøn" id="neste-3" onclick="gåTil(4)" disabled>Neste →</button>
     </div>
   </section>
 
-  <!-- STEG 4: Kvartfinale — vel 8 av 16 -->
+  <!-- STEG 4: Oppsummering -->
   <section class="seksjon" id="steg-4">
-    <h2>Kvartfinale <span class="teller" id="teller-qf">0 / 8</span></h2>
-    <p class="ingress">Vel 8 av dine 16 åttandedelsfinallag — desse kjem til kvartfinalen.</p>
-    <div id="lag-grid-qf" class="lag-grid"></div>
-    <div class="knapp-rad">
-      <button class="knapp knapp-grå" onclick="gåTil(3)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-qf" onclick="gåTil(5)" disabled>Neste →</button>
-    </div>
-  </section>
-
-  <!-- STEG 5: Semifinale — vel 4 av 8 -->
-  <section class="seksjon" id="steg-5">
-    <h2>Semifinale <span class="teller" id="teller-sf">0 / 4</span></h2>
-    <p class="ingress">Vel 4 av kvartfinalelag — desse kjem til semifinalen.</p>
-    <div id="lag-grid-sf" class="lag-grid"></div>
-    <div class="knapp-rad">
-      <button class="knapp knapp-grå" onclick="gåTil(4)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-sf" onclick="gåTil(6)" disabled>Neste →</button>
-    </div>
-  </section>
-
-  <!-- STEG 6: Finale — vel 2 av 4 -->
-  <section class="seksjon" id="steg-6">
-    <h2>Finale <span class="teller" id="teller-fin">0 / 2</span></h2>
-    <p class="ingress">Vel 2 semifinalelag — desse møtest i finalen.</p>
-    <div id="lag-grid-fin" class="lag-grid"></div>
-    <div class="knapp-rad">
-      <button class="knapp knapp-grå" onclick="gåTil(5)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-fin" onclick="gåTil(7)" disabled>Neste →</button>
-    </div>
-  </section>
-
-  <!-- STEG 7: Topp 4 -->
-  <section class="seksjon" id="steg-7">
-    <h2>Topp 4 – rangér plassane</h2>
-    <p class="ingress">Dei 4 semifinalistane rangerast 1.–4. plass. Vinnar og toar frå finalen, 3. og 4. plass frå bronsefinalen.</p>
-    <ul class="rangering-liste" id="rangering-liste"></ul>
-    <div class="knapp-rad">
-      <button class="knapp knapp-grå" onclick="gåTil(6)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="neste-rang" onclick="gåTil(8)">Neste →</button>
-    </div>
-  </section>
-
-  <!-- STEG 8: Stadfesting -->
-  <section class="seksjon" id="steg-8">
     <h2>Stadfest tippet ditt</h2>
-    <p class="ingress">Sjå over vala dine og betal via Vipps for å delta.</p>
+    <p class="ingress">Sjå over, og send deretter inn og betal.</p>
     <div id="oppsummering"></div>
     <div class="vipps-boks">
       <h3>💳 Betal 50 kr via Vipps</h3>
       <p>Send 50 kr til:</p>
       <div class="vipps-nr" id="vipps-info"></div>
-      <p style="margin-top:.6rem">Legg inn <strong id="vipps-melding"></strong> som melding</p>
+      <p style="margin-top:.5rem">Melding: <strong id="vipps-melding"></strong></p>
     </div>
     <div class="knapp-rad">
-      <button class="knapp knapp-grå" onclick="gåTil(7)">← Tilbake</button>
-      <button class="knapp knapp-grøn" id="lagre-knapp" onclick="lagreTips()">✅ Send inn tippet</button>
+      <button class="knapp knapp-grå" onclick="gåTil(3)">← Tilbake</button>
+      <button class="knapp knapp-grøn" id="lagre-knapp" onclick="lagreTips()">✅ Send inn</button>
     </div>
   </section>
 
@@ -263,18 +243,18 @@
     <div class="fullfort">
       <div class="ikon">🎉</div>
       <h2>Tippet er levert!</h2>
-      <p>Poengsum oppdaterast etter kvart som VM skrider fram.<br>Hugs å betala 50 kr via Vipps!</p>
-      <a href="poengstavle.html" class="knapp knapp-grøn" style="display:inline-block;margin-top:1rem">Sjå poengtavla →</a>
+      <p>Poengsum kjem etter kvart som VM skrider fram.<br>Hugs å betala 50 kr via Vipps!</p>
+      <a href="poengstavle.html" class="knapp knapp-grøn" style="display:inline-block;margin-top:1.5rem">
+        Sjå poengtavla →
+      </a>
     </div>
   </section>
 
-  <!-- STENGD -->
   <section class="seksjon" id="steg-stengd">
-    <div class="stengd">
-      <div style="font-size:3rem;margin-bottom:.75rem">🔒</div>
+    <div class="fullfort">
+      <div class="ikon">🔒</div>
       <h2>Tipping er stengd</h2>
-      <p class="ingress">Fristen er ute. Sjå poengtavla!</p>
-      <a href="poengstavle.html" class="knapp knapp-grøn" style="display:inline-block;margin-top:1rem">Sjå poengtavla →</a>
+      <p>Fristen er ute. <a href="poengstavle.html">Sjå poengtavla →</a></p>
     </div>
   </section>
 
@@ -285,16 +265,24 @@
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ─── State ───────────────────────────────────────────────
-const tips = {
-  namn: "", epost: "",
-  r32: [], r16: [], qf: [], sf: [], finale: [],
-  ranking: [null, null, null, null],
-};
+// ─── Terar ───────────────────────────────────────────────
+const TERAR = [
+  { id: "p1",    tittel: "🥇 1. plass",          maks: 1, gruppe: "einskilde" },
+  { id: "p2",    tittel: "🥈 2. plass",          maks: 1, gruppe: "einskilde" },
+  { id: "p3",    tittel: "🥉 3. plass",          maks: 1, gruppe: "einskilde" },
+  { id: "p4",    tittel: "4. plass",             maks: 1, gruppe: "einskilde" },
+  { id: "p5_8",  tittel: "5.–8. plass (QF-tap)", maks: 4, gruppe: "gruppe" },
+  { id: "p9_16", tittel: "9.–16. plass (R16-tap)",maks: 8, gruppe: "gruppe" },
+];
 
-const MAKS = { r32: 32, r16: 16, qf: 8, sf: 4, finale: 2 };
-const TELLER_ID = { r32:"teller-r32", r16:"teller-r16", qf:"teller-qf", sf:"teller-sf", finale:"teller-fin" };
-const NESTE_ID  = { r32:"neste-r32",  r16:"neste-r16",  qf:"neste-qf",  sf:"neste-sf",  finale:"neste-fin" };
+// ─── State ───────────────────────────────────────────────
+let valt = [];          // 16 valte lag (step 2)
+let tier = {            // plassering (step 3)
+  p1: null, p2: null, p3: null, p4: null,
+  p5_8: [], p9_16: [],
+};
+let aktivPool = null;   // markert lag i pool
+let namnn = "", epostt = "";
 
 // ─── Init ────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", () => {
@@ -302,8 +290,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("vipps-info").textContent = APP.vippsNummer + " (" + APP.vippsNavn + ")";
   if (new Date() > new Date(APP.frist)) {
     visSeksjon("steg-stengd");
-    document.getElementById("steg-indikator").style.display = "none";
+    document.getElementById("steg-dots").style.display = "none";
   }
+  byggGruppeGrid();
 });
 
 // ─── Navigasjon ──────────────────────────────────────────
@@ -311,200 +300,265 @@ function visSeksjon(id) {
   document.querySelectorAll(".seksjon").forEach(s => s.classList.remove("synleg"));
   document.getElementById(id).classList.add("synleg");
 }
-
 function gåTil(n) {
-  if (n === 3 && tips.r32.length !== 32) { visMelding("Vel nøyaktig 32 lag", "feil"); return; }
-  if (n === 4 && tips.r16.length !== 16) { visMelding("Vel nøyaktig 16 lag", "feil"); return; }
-  if (n === 5 && tips.qf.length  !==  8) { visMelding("Vel nøyaktig 8 lag",  "feil"); return; }
-  if (n === 6 && tips.sf.length  !==  4) { visMelding("Vel nøyaktig 4 lag",  "feil"); return; }
-  if (n === 7 && tips.finale.length !== 2) { visMelding("Vel nøyaktig 2 lag", "feil"); return; }
-
-  if (n === 3) byggSubGrid("lag-grid-r16", tips.r32, "r16");
-  if (n === 4) byggSubGrid("lag-grid-qf",  tips.r16, "qf");
-  if (n === 5) byggSubGrid("lag-grid-sf",  tips.qf,  "sf");
-  if (n === 6) byggSubGrid("lag-grid-fin", tips.sf,  "finale");
-  if (n === 7) byggRangering();
-  if (n === 8) byggOppsummering();
-
-  for (let i = 1; i <= 8; i++) {
-    const dot = document.getElementById("dot-" + i);
-    if (!dot) continue;
-    dot.classList.remove("aktiv", "ferdig");
-    if (i < n) dot.classList.add("ferdig");
-    else if (i === n) dot.classList.add("aktiv");
+  if (n === 3 && valt.length !== 16) { visMelding("Vel nøyaktig 16 lag", "feil"); return; }
+  if (n === 4 && !alleITier())       { visMelding("Plasser alle 16 lag i ein tier", "feil"); return; }
+  for (let i = 1; i <= 4; i++) {
+    const d = document.getElementById("dot-" + i);
+    if (!d) continue;
+    d.classList.remove("aktiv", "ferdig");
+    if (i < n) d.classList.add("ferdig");
+    else if (i === n) d.classList.add("aktiv");
   }
+  if (n === 3) byggTierUI();
+  if (n === 4) byggOppsummering();
   visSeksjon("steg-" + n);
   window.scrollTo(0, 0);
 }
 
 // ─── Steg 1 ──────────────────────────────────────────────
 async function startTipping() {
-  const namn  = document.getElementById("inp-namn").value.trim();
-  const epost = document.getElementById("inp-epost").value.trim().toLowerCase();
-  if (!namn)  { visMelding("Skriv inn namnet ditt", "feil"); return; }
-  if (!epost || !epost.includes("@")) { visMelding("Gyldig e-post krevst", "feil"); return; }
-  tips.namn  = namn;
-  tips.epost = epost;
-  document.getElementById("vipps-melding").textContent = "VM " + namn;
+  namnn  = document.getElementById("inp-namn").value.trim();
+  epostt = document.getElementById("inp-epost").value.trim().toLowerCase();
+  if (!namnn)  { visMelding("Skriv inn namnet ditt", "feil"); return; }
+  if (!epostt || !epostt.includes("@")) { visMelding("Gyldig e-post krevst", "feil"); return; }
+  document.getElementById("vipps-melding").textContent = "VM " + namnn;
 
-  const dok = await db.collection("tippers").doc(sanitertEpost(epost)).get();
+  const dok = await db.collection("tippers").doc(sanitertEpost(epostt)).get();
   if (dok.exists) {
     const d = dok.data();
-    tips.r32    = d.r32    || [];
-    tips.r16    = d.r16    || [];
-    tips.qf     = d.qf     || [];
-    tips.sf     = d.sf     || [];
-    tips.finale = d.finale || [];
-    tips.ranking = d.ranking || [null, null, null, null];
-    visMelding("Eksisterande tipp lasta inn – du kan endra det.", "ok");
+    if (d.toppliste) {
+      const tl = d.toppliste;
+      tier = {
+        p1: tl.p1 || null, p2: tl.p2 || null,
+        p3: tl.p3 || null, p4: tl.p4 || null,
+        p5_8:  tl.p5_8  || [],
+        p9_16: tl.p9_16 || [],
+      };
+      valt = [tier.p1, tier.p2, tier.p3, tier.p4, ...tier.p5_8, ...tier.p9_16].filter(Boolean);
+    }
+    visMelding("Eksisterande tipp lasta inn!", "ok");
+    oppdaterGruppeGrid();
   }
-  byggR32Grid();
   gåTil(2);
 }
-
 function sanitertEpost(e) { return e.replace(/[.#$/[\]]/g, "_"); }
 
-// ─── Steg 2: R32-grid (gruppevis) ────────────────────────
-function byggR32Grid() {
-  const container = document.getElementById("lag-grid-r32");
+// ─── Steg 2: Vel 16 lag ──────────────────────────────────
+function byggGruppeGrid() {
+  const container = document.getElementById("gruppe-grid");
   container.innerHTML = "";
-  const grupperte = lagPerGruppe();
+  const grl = lagPerGruppe();
   for (const g of GRUPPER) {
-    const lag = grupperte[g];
-    if (!lag.length) continue;
     const div = document.createElement("div");
-    div.className = "konf-gruppe";
-    div.innerHTML = `<div class="konf-tittel">Gruppe ${g}</div><div class="lag-grid" id="r32-grid-${g}"></div>`;
+    div.className = "gruppe-blokk";
+    div.innerHTML = `<div class="gruppe-tittel">Gruppe ${g}</div><div class="lag-rad" id="gr-${g}"></div>`;
     container.appendChild(div);
-    const grid = document.getElementById("r32-grid-" + g);
-    for (const l of lag) grid.appendChild(lagKnapp(l, "r32"));
+    for (const l of grl[g]) {
+      const btn = document.createElement("button");
+      btn.className = "lagbtn" + (valt.includes(l.id) ? " valt" : "");
+      btn.dataset.id = l.id;
+      btn.textContent = l.flag + " " + l.namn;
+      btn.addEventListener("click", () => veksleValt(l.id, btn));
+      document.getElementById("gr-" + g).appendChild(btn);
+    }
   }
-  oppdaterTeller("r32");
+  oppdaterTeller2();
 }
-
-// ─── Sub-grid (R16, QF, SF, Finale) ──────────────────────
-function byggSubGrid(gridId, kjeldeLag, fase) {
-  const grid = document.getElementById(gridId);
-  grid.innerHTML = "";
-  for (const id of kjeldeLag) grid.appendChild(lagKnapp(lagFraId(id), fase));
-  oppdaterTeller(fase);
+function oppdaterGruppeGrid() {
+  document.querySelectorAll(".lagbtn").forEach(btn => {
+    btn.classList.toggle("valt", valt.includes(btn.dataset.id));
+  });
+  oppdaterTeller2();
 }
-
-// ─── Lag-knapp ────────────────────────────────────────────
-function lagKnapp(lag, fase) {
-  const btn = document.createElement("button");
-  btn.className = "lag-knapp";
-  btn.dataset.id = lag.id;
-  btn.innerHTML  = `${lag.flag} ${lag.namn}`;
-  if (tips[fase] && tips[fase].includes(lag.id)) btn.classList.add("valt");
-  btn.addEventListener("click", () => veksleVal(btn, fase));
-  return btn;
-}
-
-function veksleVal(btn, fase) {
-  if (btn.classList.contains("deaktivert")) return;
-  const id = btn.dataset.id;
-  const arr = tips[fase];
-  if (arr.includes(id)) {
-    arr.splice(arr.indexOf(id), 1);
+function veksleValt(id, btn) {
+  if (valt.includes(id)) {
+    valt.splice(valt.indexOf(id), 1);
     btn.classList.remove("valt");
+    // Fjern frå tier om det var der
+    fjernFraTier(id);
   } else {
-    if (arr.length >= MAKS[fase]) { visMelding(`Maks ${MAKS[fase]} lag i denne runden`, "feil"); return; }
-    arr.push(id);
+    if (valt.length >= 16) { visMelding("Maks 16 lag", "feil"); return; }
+    valt.push(id);
     btn.classList.add("valt");
   }
-  // Kaskade: rens nedstrøms val
-  const rekkefølgje = ["r32", "r16", "qf", "sf", "finale"];
-  const idx = rekkefølgje.indexOf(fase);
-  for (let i = idx + 1; i < rekkefølgje.length; i++) {
-    const neste = rekkefølgje[i];
-    const kjelde = tips[rekkefølgje[i - 1]];
-    tips[neste] = tips[neste].filter(id => kjelde.includes(id));
+  oppdaterTeller2();
+}
+function oppdaterTeller2() {
+  const n = valt.length;
+  const el = document.getElementById("teller2");
+  el.textContent = n + " / 16";
+  el.classList.toggle("over", n > 16);
+  document.getElementById("neste-2").disabled = n !== 16;
+}
+
+// ─── Steg 3: Plassering ──────────────────────────────────
+function byggTierUI() {
+  aktivPool = null;
+  const grid = document.getElementById("tier-grid");
+  grid.innerHTML = "";
+  for (const t of TERAR) {
+    const div = document.createElement("div");
+    div.className = "tier-kort";
+    div.dataset.tier = t.id;
+    div.innerHTML = `<div class="tier-tittel">${t.tittel} (${t.maks})</div>
+                     <div class="tier-slots" id="slots-${t.id}"></div>`;
+    div.addEventListener("click", (e) => {
+      if (e.target.classList.contains("tier-slot") && e.target.classList.contains("fylt")) return;
+      plasserITier(t.id, t.maks);
+    });
+    grid.appendChild(div);
   }
-  tips.ranking = tips.ranking.map(id => tips.finale.includes(id) ? id : null);
-  oppdaterTeller(fase);
+  oppdaterTierUI();
 }
 
-function oppdaterTeller(fase) {
-  const n = tips[fase].length;
-  const maks = MAKS[fase];
-  const el = document.getElementById(TELLER_ID[fase]);
-  if (el) { el.textContent = `${n} / ${maks}`; el.classList.toggle("over", n > maks); }
-  const neste = document.getElementById(NESTE_ID[fase]);
-  if (neste) neste.disabled = (n !== maks);
-}
+function plasserITier(tierId, maks) {
+  if (!aktivPool) { visMelding("Klikk eit lag frå «Uplacerte lag» først", "feil"); return; }
+  const id = aktivPool;
 
-// ─── Steg 7: Rangering ───────────────────────────────────
-function byggRangering() {
-  const sfLag  = tips.sf.map(lagFraId);
-  const finLag = tips.finale;
-  const liste  = document.getElementById("rangering-liste");
-  liste.innerHTML = "";
-  const posnamn = ["🥇 1. plass (VM-meister)", "🥈 2. plass", "🥉 3. plass (bronsefinalen)", "4. plass (bronsefinalen)"];
-  for (let i = 0; i < 4; i++) {
-    const aktuelle = i < 2
-      ? sfLag.filter(l =>  finLag.includes(l.id))
-      : sfLag.filter(l => !finLag.includes(l.id));
-    const forhandsval = tips.ranking[i] || "";
-    const li = document.createElement("li");
-    li.className = "rangering-rad";
-    li.innerHTML = `
-      <span class="rang-nr">${posnamn[i]}</span>
-      <select class="rang-select" id="rang-${i}" onchange="oppdaterRang(${i}, this.value)">
-        <option value="">— vel lag —</option>
-        ${aktuelle.map(l => `<option value="${l.id}" ${l.id === forhandsval ? "selected" : ""}>${l.flag} ${l.namn}</option>`).join("")}
-      </select>`;
-    liste.appendChild(li);
+  // Sjekk om tier er full
+  const er = tierId === "p5_8" ? tier.p5_8 : tierId === "p9_16" ? tier.p9_16 : null;
+  if (er !== null && er.length >= maks) {
+    visMelding("Denne plassen er full (" + maks + " lag)", "feil"); return;
   }
+  if (er === null && tier[tierId] !== null) {
+    visMelding("Denne plassen er allereie fylt", "feil"); return;
+  }
+
+  // Plasser
+  fjernFraTier(id);
+  if (tierId === "p5_8" || tierId === "p9_16") {
+    tier[tierId].push(id);
+  } else {
+    tier[tierId] = id;
+  }
+  aktivPool = null;
+  oppdaterTierUI();
+  oppdaterNeste3();
 }
 
-function oppdaterRang(pos, val) { tips.ranking[pos] = val || null; }
+function fjernFraTier(id) {
+  if (tier.p1 === id) tier.p1 = null;
+  if (tier.p2 === id) tier.p2 = null;
+  if (tier.p3 === id) tier.p3 = null;
+  if (tier.p4 === id) tier.p4 = null;
+  tier.p5_8  = tier.p5_8.filter(x => x !== id);
+  tier.p9_16 = tier.p9_16.filter(x => x !== id);
+}
 
-// ─── Steg 8: Oppsummering ────────────────────────────────
+function oppdaterTierUI() {
+  // Oppdater alle tier-slots
+  for (const t of TERAR) {
+    const container = document.getElementById("slots-" + t.id);
+    if (!container) continue;
+    container.innerHTML = "";
+
+    const ids = (t.id === "p5_8" || t.id === "p9_16")
+      ? tier[t.id]
+      : (tier[t.id] ? [tier[t.id]] : []);
+
+    // Fytte lag
+    for (const id of ids) {
+      const l = lagFraId(id);
+      const span = document.createElement("span");
+      span.className = "tier-slot fylt";
+      span.textContent = l.flag + " " + l.namn + " ×";
+      span.title = "Klikk for å flytta tilbake";
+      span.addEventListener("click", (e) => {
+        e.stopPropagation();
+        fjernFraTier(id);
+        aktivPool = null;
+        oppdaterTierUI();
+        oppdaterPoolUI();
+        oppdaterNeste3();
+      });
+      container.appendChild(span);
+    }
+
+    // Tomme slots
+    const att = t.maks - ids.length;
+    for (let i = 0; i < att; i++) {
+      const span = document.createElement("span");
+      span.className = "tom-slot";
+      span.textContent = "tom plass";
+      container.appendChild(span);
+    }
+  }
+  oppdaterPoolUI();
+}
+
+function oppdaterPoolUI() {
+  // Pool = valt men ikkje i noko tier
+  const iTier = [tier.p1, tier.p2, tier.p3, tier.p4, ...tier.p5_8, ...tier.p9_16].filter(Boolean);
+  const pool = valt.filter(id => !iTier.includes(id));
+
+  const rad = document.getElementById("pool-rad");
+  rad.innerHTML = "";
+  document.getElementById("pool-teller").textContent = pool.length;
+
+  for (const id of pool) {
+    const l = lagFraId(id);
+    const btn = document.createElement("button");
+    btn.className = "poolbtn" + (aktivPool === id ? " aktiv" : "");
+    btn.textContent = l.flag + " " + l.namn;
+    btn.addEventListener("click", () => {
+      aktivPool = aktivPool === id ? null : id;
+      oppdaterPoolUI();
+      document.getElementById("hint-tekst").textContent =
+        aktivPool ? "👆 Klikk no ein plass for å leggja dit " + l.flag + " " + l.namn : "👆 Klikk eit lag frå «Uplacerte lag» for å starta";
+    });
+    rad.appendChild(btn);
+  }
+
+  // Oppdater aktiv-markering på tiers
+  document.querySelectorAll(".tier-kort").forEach(k => {
+    k.classList.toggle("aktiv-target", aktivPool !== null);
+  });
+}
+
+function alleITier() {
+  const iTier = [tier.p1, tier.p2, tier.p3, tier.p4, ...tier.p5_8, ...tier.p9_16].filter(Boolean);
+  return iTier.length === 16 && valt.every(id => iTier.includes(id));
+}
+function oppdaterNeste3() {
+  document.getElementById("neste-3").disabled = !alleITier();
+}
+
+// ─── Steg 4: Oppsummering ────────────────────────────────
 function byggOppsummering() {
-  if (!validertRangering()) { visMelding("Fyll inn alle 4 plassar i rangeringa", "feil"); gåTil(7); return; }
-  const fasar = [
-    { key:"r32",    tittel:"🏟️ 16.-delsfinale (32 lag)" },
-    { key:"r16",    tittel:"⚡ Åttandedelsfinale (16 lag)" },
-    { key:"qf",     tittel:"🎯 Kvartfinale (8 lag)" },
-    { key:"sf",     tittel:"🔥 Semifinale (4 lag)" },
-    { key:"finale", tittel:"🏆 Finale (2 lag)" },
+  const definisjonar = [
+    { ids: tier.p1 ? [tier.p1] : [], tittel: "🥇 1. plass" },
+    { ids: tier.p2 ? [tier.p2] : [], tittel: "🥈 2. plass" },
+    { ids: tier.p3 ? [tier.p3] : [], tittel: "🥉 3. plass" },
+    { ids: tier.p4 ? [tier.p4] : [], tittel: "4. plass" },
+    { ids: tier.p5_8,  tittel: "5.–8. plass" },
+    { ids: tier.p9_16, tittel: "9.–16. plass" },
   ];
   let html = "";
-  for (const f of fasar) {
-    html += `<div class="oppsummering-seksjon">
-      <h3>${f.tittel}</h3>
-      <div class="lag-chips">
-        ${tips[f.key].map(id => { const l = lagFraId(id); return `<span class="chip">${l.flag} ${l.namn}</span>`; }).join("")}
-      </div></div>`;
+  for (const d of definisjonar) {
+    html += `<div class="ops-tier"><h4>${d.tittel}</h4><div class="chip-rad">
+      ${d.ids.map(id => { const l = lagFraId(id); return `<span class="chip">${l.flag} ${l.namn}</span>`; }).join("") || "<span style='color:var(--muted);font-size:.85rem'>—</span>"}
+    </div></div>`;
   }
-  const posnamn = ["🥇","🥈","🥉","4."];
-  html += `<div class="oppsummering-seksjon"><h3>📊 Topp 4</h3><div class="lag-chips">
-    ${tips.ranking.map((id, i) => { const l = lagFraId(id||"?"); return `<span class="chip">${posnamn[i]} ${id ? l.flag+" "+l.namn : "—"}</span>`; }).join("")}
-  </div></div>`;
   document.getElementById("oppsummering").innerHTML = html;
 }
 
-function validertRangering() { return tips.ranking.every(v => v !== null && v !== ""); }
-
 // ─── Lagre ───────────────────────────────────────────────
 async function lagreTips() {
-  if (!validertRangering()) { visMelding("Topp 4 er ikkje fullstendig", "feil"); return; }
   const knapp = document.getElementById("lagre-knapp");
   knapp.disabled = true; knapp.textContent = "Lagrar…";
   try {
-    await db.collection("tippers").doc(sanitertEpost(tips.epost)).set({
-      namn: tips.namn, epost: tips.epost,
-      r32: tips.r32, r16: tips.r16, qf: tips.qf, sf: tips.sf,
-      finale: tips.finale, ranking: tips.ranking,
-      betalt: false,
+    await db.collection("tippers").doc(sanitertEpost(epostt)).set({
+      namn: namnn, epost: epostt, betalt: false,
       tidspunkt: firebase.firestore.FieldValue.serverTimestamp(),
+      toppliste: { p1: tier.p1, p2: tier.p2, p3: tier.p3, p4: tier.p4,
+                   p5_8: tier.p5_8, p9_16: tier.p9_16 },
     });
     visSeksjon("steg-ferdig");
   } catch (e) {
     console.error(e);
     visMelding("Noko gjekk gale. Prøv igjen.", "feil");
-    knapp.disabled = false; knapp.textContent = "✅ Send inn tippet";
+    knapp.disabled = false; knapp.textContent = "✅ Send inn";
   }
 }
 
