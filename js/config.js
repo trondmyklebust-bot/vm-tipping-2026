@@ -19,9 +19,9 @@ const APP = {
   tittel:       "VM-tipping 2026 ⚽",
   arrangor:     "Trond",                      // Ditt namn
   vippsNummer:  "98203146",              // Mobilnummer knytt til Vipps
-  vippsNavn:    "Trond Myklebust",                  // Namn som vises i Vipps
+  vippsNavn:    "Trond",                  // Namn som vises i Vipps
   pris:         50,                           // Innmelding i kroner
-  adminKode:    "qStyle91715753!",       // ⚠️  Byt dette!
   frist:        "2026-06-11T18:00:00",        // Frist for å tippa (VM-kampstart)
+  // adminKode er fjerna — admin-innlogging skjer no via Firebase Authentication
 };
 
