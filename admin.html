@@ -234,7 +234,7 @@ function loggInn() {
   const kode = document.getElementById("passord-input").value.trim();
   if (kode === APP.adminKode) {
     document.getElementById("login-skjerm").style.display = "none";
-    document.getElementById("app").style.display = "";
+    document.getElementById("app").style.display = "block";
     init();
   } else {
     document.getElementById("feil-melding").textContent = "Feil passord. Prøv igjen.";
