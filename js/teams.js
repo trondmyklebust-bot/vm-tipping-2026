@@ -117,39 +117,33 @@ function lagPerKonf() {
   return res;
 }
 
-// Poengrekning (maks 66 poeng: 32+16+8+4+2+4)
+// Poengrekning (maks 32 poeng: 16 for å ha riktig lag med + 16 for riktig tier)
+// Datastruktur: toppliste: { p1, p2, p3, p4, p5_8: [...4], p9_16: [...8] }
 function beregnPoeng(tips, resultat) {
-  let poeng = 0;
-  const detaljar = { r32: 0, r16: 0, qf: 0, sf: 0, finale: 0, ranking: 0 };
+  const detaljar = { med: 0, plassering: 0 };
 
-  if (resultat.r32 && tips.r32) {
-    detaljar.r32 = tips.r32.filter(id => resultat.r32.includes(id)).length;
-    poeng += detaljar.r32;
-  }
-  if (resultat.r16 && tips.r16) {
-    detaljar.r16 = tips.r16.filter(id => resultat.r16.includes(id)).length;
-    poeng += detaljar.r16;
-  }
-  if (resultat.qf && tips.qf) {
-    detaljar.qf = tips.qf.filter(id => resultat.qf.includes(id)).length;
-    poeng += detaljar.qf;
-  }
-  if (resultat.sf && tips.sf) {
-    detaljar.sf = tips.sf.filter(id => resultat.sf.includes(id)).length;
-    poeng += detaljar.sf;
-  }
-  if (resultat.finale && tips.finale) {
-    detaljar.finale = tips.finale.filter(id => resultat.finale.includes(id)).length;
-    poeng += detaljar.finale;
-  }
-  if (resultat.ranking && tips.ranking) {
-    for (let i = 0; i < 4; i++) {
-      if (tips.ranking[i] && tips.ranking[i] === resultat.ranking[i]) {
-        detaljar.ranking++;
-        poeng++;
-      }
-    }
+  const rt = resultat.toppliste;
+  const tt = tips.toppliste;
+  if (!rt || !tt) return { poeng: 0, detaljar };
+
+  // Alle 16 lag i resultatet og tippet
+  const alleRes16 = [rt.p1, rt.p2, rt.p3, rt.p4,
+    ...(rt.p5_8  || []), ...(rt.p9_16 || [])].filter(Boolean);
+  const alleT16   = [tt.p1, tt.p2, tt.p3, tt.p4,
+    ...(tt.p5_8  || []), ...(tt.p9_16 || [])].filter(Boolean);
+
+  for (const id of alleT16) {
+    // +1 for kvart lag som er blant dei faktiske topp 16
+    if (alleRes16.includes(id)) detaljar.med++;
+
+    // +1 for riktig tier/plassering
+    if      (id === rt.p1 && id === tt.p1) detaljar.plassering++;
+    else if (id === rt.p2 && id === tt.p2) detaljar.plassering++;
+    else if (id === rt.p3 && id === tt.p3) detaljar.plassering++;
+    else if (id === rt.p4 && id === tt.p4) detaljar.plassering++;
+    else if ((rt.p5_8  || []).includes(id) && (tt.p5_8  || []).includes(id)) detaljar.plassering++;
+    else if ((rt.p9_16 || []).includes(id) && (tt.p9_16 || []).includes(id)) detaljar.plassering++;
   }
 
-  return { poeng, detaljar };
+  return { poeng: detaljar.med + detaljar.plassering, detaljar };
 }
