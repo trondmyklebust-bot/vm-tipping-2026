@@ -70,6 +70,7 @@
     cursor: pointer; user-select: none; transition: all .12s;
   }
   .lagbtn:hover { border-color: var(--sel); }
+  .lagbtn:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
   .lagbtn.valt { background: var(--green); border-color: var(--green); color: #fff; }
 
   /* ── Steg 3: plassering ──────────────────────── */
@@ -78,8 +79,9 @@
 
   .tier-kort {
     background: var(--card); border: 2px solid var(--border); border-radius: .6rem;
-    padding: .85rem 1rem; transition: border-color .2s;
+    padding: .85rem 1rem; transition: border-color .2s; cursor: pointer;
   }
+  .tier-kort:focus-visible { outline: 2px solid var(--sel); outline-offset: 2px; }
   .tier-kort.aktiv-target { border-color: var(--sel); background: rgba(14,165,233,.08); }
   .tier-tittel { font-size: .82rem; font-weight: 700; color: var(--muted);
                  text-transform: uppercase; letter-spacing: .05em; margin-bottom: .55rem; }
@@ -105,6 +107,7 @@
     cursor: pointer; transition: all .12s;
   }
   .poolbtn:hover { border-color: var(--gold); }
+  .poolbtn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
   .poolbtn.aktiv { background: var(--gold); border-color: var(--gold); color: #000; }
 
   /* Hint */
@@ -174,11 +177,11 @@
     <h2>Velkommen!</h2>
     <p class="ingress">Fyll inn namn og e-post. Brukar du same e-post seinare hentar du att tippet ditt.</p>
     <div class="input-gruppe">
-      <label>Fullt namn</label>
+      <label for="inp-namn">Fullt namn</label>
       <input type="text" id="inp-namn" placeholder="Ola Nordmann" autocomplete="name">
     </div>
     <div class="input-gruppe">
-      <label>E-postadresse</label>
+      <label for="inp-epost">E-postadresse</label>
       <input type="email" id="inp-epost" placeholder="ola@eksempel.no" autocomplete="email">
     </div>
     <div style="font-size:.8rem;color:var(--muted);margin:.75rem 0 1rem;line-height:1.5;background:var(--bg2);border-radius:.5rem;padding:.65rem .85rem;border:1px solid var(--border)">
@@ -262,7 +265,7 @@
   </section>
 
 </main>
-<div id="toast"></div>
+<div id="toast" role="alert" aria-live="assertive" aria-atomic="true"></div>
 
 <script>
 firebase.initializeApp(firebaseConfig);
@@ -359,9 +362,11 @@ function byggGruppeGrid() {
     container.appendChild(div);
     for (const l of grl[g]) {
       const btn = document.createElement("button");
-      btn.className = "lagbtn" + (valt.includes(l.id) ? " valt" : "");
+      const erValt = valt.includes(l.id);
+      btn.className = "lagbtn" + (erValt ? " valt" : "");
       btn.dataset.id = l.id;
       btn.textContent = l.flag + " " + l.namn;
+      btn.setAttribute("aria-pressed", erValt ? "true" : "false");
       btn.addEventListener("click", () => veksleValt(l.id, btn));
       document.getElementById("gr-" + g).appendChild(btn);
     }
@@ -370,7 +375,9 @@ function byggGruppeGrid() {
 }
 function oppdaterGruppeGrid() {
   document.querySelectorAll(".lagbtn").forEach(btn => {
-    btn.classList.toggle("valt", valt.includes(btn.dataset.id));
+    const er = valt.includes(btn.dataset.id);
+    btn.classList.toggle("valt", er);
+    btn.setAttribute("aria-pressed", er ? "true" : "false");
   });
   oppdaterTeller2();
 }
@@ -378,12 +385,14 @@ function veksleValt(id, btn) {
   if (valt.includes(id)) {
     valt.splice(valt.indexOf(id), 1);
     btn.classList.remove("valt");
+    btn.setAttribute("aria-pressed", "false");
     // Fjern frå tier om det var der
     fjernFraTier(id);
   } else {
     if (valt.length >= 16) { visMelding("Maks 16 lag", "feil"); return; }
     valt.push(id);
     btn.classList.add("valt");
+    btn.setAttribute("aria-pressed", "true");
   }
   oppdaterTeller2();
 }
@@ -404,11 +413,18 @@ function byggTierUI() {
     const div = document.createElement("div");
     div.className = "tier-kort";
     div.dataset.tier = t.id;
+    div.setAttribute("role", "button");
+    div.setAttribute("tabindex", "0");
+    div.setAttribute("aria-label", t.tittel + " — klikk for å plassera valt lag her");
     div.innerHTML = `<div class="tier-tittel">${t.tittel} (${t.maks})</div>
                      <div class="tier-slots" id="slots-${t.id}"></div>`;
-    div.addEventListener("click", (e) => {
+    const handling = (e) => {
       if (e.target.classList.contains("tier-slot") && e.target.classList.contains("fylt")) return;
       plasserITier(t.id, t.maks);
+    };
+    div.addEventListener("click", handling);
+    div.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handling(e); }
     });
     grid.appendChild(div);
   }
@@ -502,8 +518,11 @@ function oppdaterPoolUI() {
   for (const id of pool) {
     const l = lagFraId(id);
     const btn = document.createElement("button");
-    btn.className = "poolbtn" + (aktivPool === id ? " aktiv" : "");
+    const erAktiv = aktivPool === id;
+    btn.className = "poolbtn" + (erAktiv ? " aktiv" : "");
     btn.textContent = l.flag + " " + l.namn;
+    btn.setAttribute("aria-pressed", erAktiv ? "true" : "false");
+    btn.setAttribute("aria-label", (erAktiv ? "Valt: " : "") + l.namn + " — klikk tier-kort for å plassera");
     btn.addEventListener("click", () => {
       aktivPool = aktivPool === id ? null : id;
       oppdaterPoolUI();

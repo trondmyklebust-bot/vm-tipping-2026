@@ -61,8 +61,15 @@
     display: grid; grid-template-columns: 3rem 1fr 5rem 7rem 5rem;
     gap: .5rem; padding: .85rem 1.25rem; align-items: center;
     border-top: 1px solid var(--border); transition: background .15s; cursor: pointer;
+    /* reset button-stilar */
+    width: 100%; background: transparent; color: inherit; font: inherit;
+    text-align: left; border-left: none; border-right: none; border-bottom: none;
   }
   .tavle-rad:hover { background: rgba(255,255,255,.03); }
+  .tavle-rad:focus-visible {
+    outline: 2px solid var(--sel); outline-offset: -2px;
+    background: rgba(14,165,233,.07);
+  }
   .tavle-rad.topp1 { background: rgba(245,158,11,.08); }
   .tavle-rad.topp2 { background: rgba(148,163,184,.05); }
   .tavle-rad.topp3 { background: rgba(194,137,74,.06); }
@@ -172,6 +179,17 @@
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
+// ── HTML-escaping (hindrar XSS) ───────────────────────────────
+function escHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("app-tittel").textContent = APP.tittel;
   lastData();
@@ -260,18 +278,19 @@ function visPoengtavle(tippers, resultat) {
       : `<div class="poeng-celle vent">–</div>`;
 
     html += `
-      <div class="tavle-rad ${radKls}" id="rad-${i}" title="Klikk for detaljar">
-        <div class="plass ${plassKls}">${ikon}</div>
-        <div class="namn-celle">
-          ${t.namn}
-        </div>
+      <button class="tavle-rad ${radKls}" id="rad-${i}"
+              aria-expanded="false" aria-controls="detaljar-${i}"
+              aria-label="Sjå detaljar for ${escHtml(t.namn)}">
+        <div class="plass ${plassKls}" aria-hidden="true">${ikon}</div>
+        <div class="namn-celle">${escHtml(t.namn)}</div>
         ${celleEl(t.detaljar.med)}
         <div class="col-plassering">${harResultat
           ? `<div class="poeng-celle">${t.detaljar.plassering}</div>`
           : `<div class="poeng-celle vent">–</div>`}</div>
         <div class="poeng-celle total">${harResultat ? t.poeng : "–"}</div>
-      </div>
-      <div class="detaljar-panel" id="detaljar-${i}">
+      </button>
+      <div class="detaljar-panel" id="detaljar-${i}" role="region"
+           aria-label="Detaljar for ${escHtml(t.namn)}">
         ${byggDetaljarHTML(t, resultat)}
       </div>`;
   });
@@ -280,8 +299,11 @@ function visPoengtavle(tippers, resultat) {
   container.innerHTML = html;
 
   rangerte.forEach((_, i) => {
-    document.getElementById("rad-" + i).addEventListener("click", () => {
-      document.getElementById("detaljar-" + i).classList.toggle("synleg");
+    const rad = document.getElementById("rad-" + i);
+    const panel = document.getElementById("detaljar-" + i);
+    rad.addEventListener("click", () => {
+      const open = panel.classList.toggle("synleg");
+      rad.setAttribute("aria-expanded", open ? "true" : "false");
     });
   });
 }

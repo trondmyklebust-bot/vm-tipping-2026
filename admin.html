@@ -129,9 +129,9 @@
   <div class="login-boks">
     <h1>🔐 Admin</h1>
     <p class="sub">Logg inn med Firebase-kontoen din</p>
-    <label>E-postadresse</label>
+    <label for="inp-admin-epost">E-postadresse</label>
     <input type="email" id="inp-admin-epost" placeholder="admin@eksempel.no" autocomplete="email">
-    <label>Passord</label>
+    <label for="inp-admin-passord">Passord</label>
     <input type="password" id="inp-admin-passord" placeholder="Passord" autocomplete="current-password">
     <div class="feil-melding" id="feil-melding"></div>
     <button class="knapp knapp-grøn" onclick="loggInn()" style="width:100%;margin-top:1.25rem">Logg inn</button>
@@ -238,6 +238,17 @@
 firebase.initializeApp(firebaseConfig);
 const db   = firebase.firestore();
 const auth = firebase.auth();
+
+// ── HTML-escaping (hindrar XSS) ───────────────────────────────
+function escHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 // ── Auth-tilstand ─────────────────────────────────────────────
 auth.onAuthStateChanged(brukar => {
@@ -449,15 +460,15 @@ async function lastDeltakarar() {
       const tid = t.tidspunkt?.toDate?.()?.toLocaleDateString("nn-NO") || "–";
       const betaltKls = t.betalt ? "betalt-ja" : "betalt-nei";
       const betaltTxt = t.betalt ? "✅ Ja" : "❌ Nei";
-      const safeId    = doc.id.replace(/'/g, "\\'");
-      const safeNamn  = (t.namn || "").replace(/'/g, "\\'");
+      const safeId    = escHtml(doc.id);
+      const safeNamn  = escHtml(t.namn || "");
 
       html += `
         <div class="deltakar-rad">
-          <div>${t.namn || "–"}<br><small style="color:var(--muted);font-size:.75rem">${tid}</small></div>
-          <div style="font-size:.85rem;color:var(--muted)">${t.epost || "–"}</div>
+          <div>${escHtml(t.namn) || "–"}<br><small style="color:var(--muted);font-size:.75rem">${tid}</small></div>
+          <div style="font-size:.85rem;color:var(--muted)">${escHtml(t.epost) || "–"}</div>
           <div class="${betaltKls}">
-            <button class="toggle-betalt" onclick="toggleBetalt('${safeId}', ${!!t.betalt})">
+            <button class="toggle-betalt" data-id="${safeId}" data-betalt="${!!t.betalt}">
               ${betaltTxt}
             </button>
           </div>
@@ -465,10 +476,10 @@ async function lastDeltakarar() {
 
       slettHtml += `
         <div class="slett-rad">
-          <div>${t.namn || "–"}</div>
-          <div style="font-size:.85rem;color:var(--muted)">${t.epost || "–"}</div>
+          <div>${escHtml(t.namn) || "–"}</div>
+          <div style="font-size:.85rem;color:var(--muted)">${escHtml(t.epost) || "–"}</div>
           <button class="knapp knapp-raud" style="padding:.4rem .9rem;font-size:.82rem"
-            onclick="slettDeltakar('${safeId}', '${safeNamn}')">
+            data-slett-id="${safeId}" data-slett-namn="${safeNamn}">
             🗑️ Slett
           </button>
         </div>`;
@@ -478,8 +489,20 @@ async function lastDeltakarar() {
     document.getElementById("slett-boks").style.display = "";
     document.getElementById("slett-liste").innerHTML = slettHtml;
 
+    // Event delegation — unngår inline onclick med brukardata
+    container.querySelectorAll(".toggle-betalt").forEach(btn => {
+      btn.addEventListener("click", () => {
+        toggleBetalt(btn.dataset.id, btn.dataset.betalt === "true");
+      });
+    });
+    document.getElementById("slett-liste").querySelectorAll("[data-slett-id]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        slettDeltakar(btn.dataset.slettId, btn.dataset.slettNamn);
+      });
+    });
+
   } catch (e) {
-    container.innerHTML = "<div class='laster'>Klarte ikkje lasta deltakarar: " + e.message + "</div>";
+    container.innerHTML = "<div class='laster'>Klarte ikkje lasta deltakarar: " + escHtml(e.message) + "</div>";
   }
 }
 
